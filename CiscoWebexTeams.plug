@@ -1,0 +1,9 @@
+[Core]
+Name = CiscoWebexTeams
+Module = CiscoWebexTeams
+
+[Documentation]
+Description = This is a backend implementation for Cisco Webex Teams
+
+[Python]
+Version = 3.5+
