@@ -70,6 +70,26 @@ class CiscoWebexTeamsPerson(Person):
     def emails(self):
         return self.teams_person.emails
 
+    @emails.setter
+    def emails(self, val):
+        self.teams_person._json_data['emails'] = val
+
+    @property
+    def email(self):
+      if type(self.emails) is list:
+        if len(self.emails):
+          return self.emails[0]
+
+      return None
+
+    @email.setter
+    def email(self, val):
+      self.emails = [val]
+
+    @property
+    def aclattr(self):
+        return self.teams_person.email
+
     @property
     def displayName(self):
         return self.teams_person.displayName
@@ -151,10 +171,9 @@ class CiscoWebexTeamsPerson(Person):
         return str(self) == str(other)
 
     def __unicode__(self):
-        return self.id
+        return self.email
 
     __str__ = __unicode__
-    aclattr = id
 
 
 class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
@@ -331,7 +350,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         log.debug("Fetching and building identifier for the bot itself.")
         self.bot_identifier = CiscoWebexTeamsPerson(self, self.api.people.me())
 
-        log.debug("Done! I'm connected as {} : {} ".format(self.bot_identifier, self.bot_identifier.emails))
+        log.debug("Done! I'm connected as {}".format(self.bot_identifier.email))
 
     @property
     def mode(self):
@@ -367,12 +386,10 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         Create an errbot message object
         """
-        # Need to load to complete message from Spark as the webhook message only includes IDs
-        message = self.get_message_using_id(message.id)
+        person = CiscoWebexTeamsPerson(bot=self)
+        person.id = message.id
+        person.email = message.personEmail
 
-        # We only build superficial objects using the ID as loading the full person/room details would
-        # significantly delay the processing of the message
-        person = self.create_person_using_id(message.personId)
         room = self.create_room_using_id(message.roomId)
         occupant = self.get_occupant_using_id(person=person, room=room)
         msg = self.create_message(body=message.markdown or message.text, frm=occupant, to=room,
