@@ -356,6 +356,9 @@ class CiscoWebexTeamsBackend(ErrBot):
     def mode(self):
         return 'CiscoWebexTeams'
 
+    def is_from_self(self, message):
+      return message.frm.id == message.to.id
+
     def process_websocket(self, message):
         """
         Process the data from the websocket and determine if we need to ack on it
