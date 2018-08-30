@@ -8,6 +8,7 @@ from markdown import markdown
 
 from errbot.core import ErrBot
 from errbot.backends.base import Message, Person, Room, RoomOccupant
+from errbot import rendering
 
 import ciscosparkapi
 
@@ -327,6 +328,8 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         bot_identity = config.BOT_IDENTITY
 
+        self.md = rendering.md()
+
         # Do we have the basic mandatory config needed to operate the bot
         self._bot_token = bot_identity.get('TOKEN', None)
         if not self._bot_token:
@@ -538,7 +541,10 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         :param mess: A CiscoWebexTeamsMessage
         """
-        md = markdown(mess.body, extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
+        # Need to strip out markdown - extra as not supported by Webex Teams
+        md = markdown(self.md.convert(mess.body),
+                      extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
+
         if type(mess.to) == CiscoWebexTeamsPerson:
             self.session.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md)
         else:
