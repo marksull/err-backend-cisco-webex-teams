@@ -35,6 +35,8 @@ class FailedToCreateWebexDevice(Exception):
 class FailedToFindWebexTeamsPerson(Exception):
     pass
 
+class FailedToFindWebexTeamsRoom(Exception):
+    pass
 
 class CiscoWebexTeamsMessage(Message):
     """
@@ -137,9 +139,6 @@ class CiscoWebexTeamsPerson(Person):
         except:
           raise FailedToFindWebexTeamsPerson(f'Could not find the user using the id {self.id}')
 
-    def load(self):
-        self.teams_person = self._backend.session.Person(self.id)
-
     # Required by the Err API
 
     @property
@@ -198,11 +197,9 @@ class CiscoWebexTeamsRoom(Room):
     """
     A Cisco Webex Teams Room
     """
+    def __init__(self, backend, val=None):
 
-    def __init__(self, bot, val=None):
-
-        self._bot = bot
-        self._webhook = None
+        self._backend = backend
         self._occupants = []
         val = val or {}
 
@@ -231,22 +228,21 @@ class CiscoWebexTeamsRoom(Room):
     def title(self):
         return self.teams_room.title
 
-    @classmethod
-    def get_using_id(cls, backend, val):
-        return CiscoWebexTeamsRoom(backend, backend.session.rooms.get(val))
+    def get_using_id(self):
+        try:
+            self._backend.session.rooms.get(self.id)
+        except:
+            raise FailedToFindWebexTeamsRoom(f'Could not find the room using the id {self.id}')
 
     def update_occupants(self):
 
         log.debug("Updating occupants for room {} ({})".format(self.title, self.id))
         self._occupants.clear()
 
-        for member in self._bot.session.memberships.get(self.id):
-            self._occupants.append(CiscoWebexTeamsRoomOccupant(self.id, membership=member))
+        for person in self._backend.session.memberships.get(self.id):
+            self._occupants.append(CiscoWebexTeamsRoomOccupant(self.id, person=person))
 
         log.debug("Total occupants for room {} ({}) is {} ".format(self.title, self.id, len(self._occupants)))
-
-    def load(self):
-        self.teams_room = self._bot.session.Room(self.id)
 
     # Errbot API
 
@@ -255,14 +251,17 @@ class CiscoWebexTeamsRoom(Room):
         log.debug("Joining room {} ({})".format(self.title, self.id))
 
         try:
-            self._bot.session.memberships.create(self.id, self._bot.bot_identifier.id)
-            log.debug("{} is NOW a member of {} ({})".format(self._bot.bot_identifier.displayName, self.title, self.id))
+            self._backend.session.memberships.create(self.id, self._backend.bot_identifier.id)
+            log.debug("{} is NOW a member of {} ({})".format(self._backend.bot_identifier.displayName,
+                                                             self.title,
+                                                             self.id))
 
         except ciscosparkapi.exceptions.SparkApiError as error:
             # API now returning a 403 when trying to add user to a direct conversation and they are already in the
             # conversation. For groups if the user is already a member a 409 is returned.
             if error.response.status_code == 403 or error.response.status_code == 409:
-                log.debug("{} is already a member of {} ({})".format(self._bot.bot_identifier.displayName, self.title,
+                log.debug("{} is already a member of {} ({})".format(self._backend.bot_identifier.displayName,
+                                                                     self.title,
                                                                      self.id))
             else:
                 log.exception("HTTP Exception: Failed to join room {} ({})".format(self.title, self.id))
@@ -293,7 +292,7 @@ class CiscoWebexTeamsRoom(Room):
         return "TODO"
 
     @topic.setter
-    def topic(self, topic: str) -> None:
+    def topic(self, topic):
         log.debug("Topic room yet to be implemented")  # TODO
         pass
 
@@ -301,7 +300,7 @@ class CiscoWebexTeamsRoom(Room):
     def occupants(self, session=None):
         return self._occupants
 
-    def invite(self, *args) -> None:
+    def invite(self, *args):
         log.debug("Invite room yet to be implemented")  # TODO
         pass
 
@@ -393,7 +392,9 @@ class CiscoWebexTeamsBackend(ErrBot):
         person.id = message.id
         person.email = message.personEmail
 
-        room = self.create_room_using_id(message.roomId)
+        room = CiscoWebexTeamsRoom(self)
+        room.id = message.roomId
+
         occupant = CiscoWebexTeamsRoomOccupant(self, person=person, room=room)
 
         msg = self.create_message(body=message.markdown or message.text,
@@ -401,25 +402,6 @@ class CiscoWebexTeamsBackend(ErrBot):
                                   to=room,
                                   extras={'roomType': message.roomType})
         return msg
-
-    def get_room_using_id(self, id):
-        """
-        Loads a room from Webex Teams using the id for the search criteria
-
-        :param id: The Spark id of the room
-        :return: CiscoWebexTeamsRoom
-        """
-        return CiscoWebexTeamsRoom.get_using_id(self, id)
-
-    def create_room_using_id(self, id):
-        """
-        Create a new room and sets the ID. This method DOES NOT load the room details from Webex Teams
-        :param id:
-        :return:
-        """
-        room = CiscoWebexTeamsRoom(self)
-        room.id = id
-        return room
 
     def create_message(self, body, frm, to, extras):
         """
