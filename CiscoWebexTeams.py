@@ -114,7 +114,7 @@ class CiscoWebexTeamsPerson(Person):
         """
         Return the FIRST Cisco Webex Teams person found when searching using an email address
         """
-        for person in self._backend.session.people.list(email=self.email):
+        for person in self._backend.webex_teams_api.people.list(email=self.email):
             self.teams_person = person
             return
 
@@ -124,7 +124,7 @@ class CiscoWebexTeamsPerson(Person):
         """
         Return the FIRST Cisco Webex Teams person found when searching using the display name
         """
-        for person in self._backend.session.people.list(displayName=self.displayName):
+        for person in self._backend.webex_teams_api.people.list(displayName=self.displayName):
             self.teams_person = person
             return
 
@@ -135,7 +135,7 @@ class CiscoWebexTeamsPerson(Person):
         Return a Cisco Webex Teams person when searching using an ID
         """
         try:
-            self._backend.session.people.get(self.id)
+            self._backend.webex_teams_api.people.get(self.id)
         except:
           raise FailedToFindWebexTeamsPerson(f'Could not find the user using the id {self.id}')
 
@@ -230,7 +230,7 @@ class CiscoWebexTeamsRoom(Room):
 
     def get_using_id(self):
         try:
-            self._backend.session.rooms.get(self.id)
+            self._backend.webex_teams_api.rooms.get(self.id)
         except:
             raise FailedToFindWebexTeamsRoom(f'Could not find the room using the id {self.id}')
 
@@ -239,7 +239,7 @@ class CiscoWebexTeamsRoom(Room):
         log.debug("Updating occupants for room {} ({})".format(self.title, self.id))
         self._occupants.clear()
 
-        for person in self._backend.session.memberships.get(self.id):
+        for person in self._backend.webex_teams_api.memberships.get(self.id):
             self._occupants.append(CiscoWebexTeamsRoomOccupant(self.id, person=person))
 
         log.debug("Total occupants for room {} ({}) is {} ".format(self.title, self.id, len(self._occupants)))
@@ -251,7 +251,7 @@ class CiscoWebexTeamsRoom(Room):
         log.debug("Joining room {} ({})".format(self.title, self.id))
 
         try:
-            self._backend.session.memberships.create(self.id, self._backend.bot_identifier.id)
+            self._backend.webex_teams_api.memberships.create(self.id, self._backend.bot_identifier.id)
             log.debug("{} is NOW a member of {} ({})".format(self._backend.bot_identifier.displayName,
                                                              self.title,
                                                              self.id))
@@ -341,13 +341,13 @@ class CiscoWebexTeamsBackend(ErrBot):
             config.MESSAGE_SIZE_LIMIT = CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
 
         log.debug("Setting up SparkAPI")
-        self.api = ciscosparkapi.CiscoSparkAPI(access_token=self._bot_token)
+        self.webex_teams_api = ciscosparkapi.CiscoSparkAPI(access_token=self._bot_token)
 
         log.debug("Setting up device on Webex Teams")
         self.device_info = self._get_device_info()
 
         log.debug("Fetching and building identifier for the bot itself.")
-        self.bot_identifier = CiscoWebexTeamsPerson(self, self.api.people.me())
+        self.bot_identifier = CiscoWebexTeamsPerson(self, self.webex_teams_api.people.me())
 
         log.debug("Done! I'm connected as {}".format(self.bot_identifier.email))
 
@@ -375,7 +375,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             logging.debug('Ignoring message where the verb is not type "post"')
             return
 
-        spark_message = self.api.messages.get(activity['id'])
+        spark_message = self.webex_teams_api.messages.get(activity['id'])
 
         if spark_message.personEmail in self.bot_identifier.emails:
             logging.debug('Ignoring message from myself')
@@ -402,14 +402,6 @@ class CiscoWebexTeamsBackend(ErrBot):
                                      to=room,
                                      extras={'roomType': message.roomType})
         return msg
-
-    @property
-    def session(self):
-        """
-        The session handle for sparkapi.CiscoSparkAPI
-        :return:
-        """
-        return self.api
 
     def follow_room(self, room):
         """
@@ -471,9 +463,9 @@ class CiscoWebexTeamsBackend(ErrBot):
                       extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
 
         if type(mess.to) == CiscoWebexTeamsPerson:
-            self.session.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md)
+            self.webex_teams_api.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md)
         else:
-            self.session.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md)
+            self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md)
 
     def build_reply(self, mess, text=None, private=False, threaded=False):
         """
@@ -608,7 +600,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         logging.debug('Getting device list from Webex Teams')
 
         try:
-            resp = self.api._session.get(DEVICES_URL)
+            resp = self.webex_teams_api._session.get(DEVICES_URL)
             for device in resp['devices']:
                 if device['name'] == DEVICE_DATA['name']:
                     self.device_info = device
@@ -618,7 +610,7 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         logging.info('Device does not exist in Webex Teams, creating')
 
-        resp = self.api._session.post(DEVICES_URL, json=DEVICE_DATA)
+        resp = self.webex_teams_api._session.post(DEVICES_URL, json=DEVICE_DATA)
         if resp is None:
             raise FailedToCreateWebexDevice("Could not create Webex Teams device using {}".format(DEVICES_URL))
 
