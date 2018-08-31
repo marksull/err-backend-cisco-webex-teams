@@ -32,11 +32,14 @@ DEVICE_DATA = {
 class FailedToCreateWebexDevice(Exception):
     pass
 
+
 class FailedToFindWebexTeamsPerson(Exception):
     pass
 
+
 class FailedToFindWebexTeamsRoom(Exception):
     pass
+
 
 class CiscoWebexTeamsMessage(Message):
     """
