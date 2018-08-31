@@ -397,32 +397,11 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         occupant = CiscoWebexTeamsRoomOccupant(self, person=person, room=room)
 
-        msg = self.create_message(body=message.markdown or message.text,
-                                  frm=occupant,
-                                  to=room,
-                                  extras={'roomType': message.roomType})
+        msg = CiscoWebexTeamsMessage(body=message.markdown or message.text,
+                                     frm=occupant,
+                                     to=room,
+                                     extras={'roomType': message.roomType})
         return msg
-
-    def create_message(self, body, frm, to, extras):
-        """
-        Creates a new message ready for sending
-
-        :param body: The text that contains the message to be sent
-        :param frm: A CiscoWebexTeamsPerson from whom the message will originate
-        :param to: A CiscoWebexTeamsPerson to whom the message will be sent
-        :param extras: A dictionary of extra items
-        :return: CiscoWebexTeamsMessage
-        """
-        return CiscoWebexTeamsMessage(body=body, frm=frm, to=to, extras=extras)
-
-    def get_message_using_id(self, id):
-        """
-        Loads a message from Webex Teams using the id for the search criteria
-
-        :param id: The id of the message to load
-        :return: Message
-        """
-        return self.session.messages.get(id)
 
     @property
     def session(self):
