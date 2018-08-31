@@ -513,12 +513,11 @@ class CiscoWebexTeamsBackend(ErrBot):
                         while True:
                             message = await ws.recv()
                             logging.debug("WebSocket Received Message(raw): %s\n" % message)
-                            # try:
-                            #     loop = asyncio.get_event_loop()
-                            #     loop.run_in_executor(None, self.process_websocket, message)
-                            self.process_websocket(message)
-                            # except:
-                            #     logging.warning('An exception occurred while processing message. Ignoring. ')
+                            try:
+                                loop = asyncio.get_event_loop()
+                                loop.run_in_executor(None, self.process_websocket, message)
+                            except:
+                                logging.warning('An exception occurred while processing message. Ignoring. ')
 
                 asyncio.get_event_loop().run_until_complete(_run())
         except KeyboardInterrupt:
