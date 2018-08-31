@@ -32,6 +32,9 @@ DEVICE_DATA = {
 class FailedToCreateWebexDevice(Exception):
     pass
 
+class FailedToFindWebexTeamsPerson(Exception):
+    pass
+
 
 class CiscoWebexTeamsMessage(Message):
     """
@@ -108,17 +111,18 @@ class CiscoWebexTeamsPerson(Person):
         return CiscoWebexTeamsPerson(ciscosparkapi.Person(obj))
 
     @classmethod
-    def find_using_email(cls, session, value):
+    def find_using_email(cls, bot, value):
         """
         Return the FIRST Cisco Webex Teams person found when searching using an email address
 
-        :param session: The CiscoSparkAPI session handle
+        :param bot: The bot
         :param value: the value to search for
         :return: A CiscoWebexTeamsPerson
         """
-        for person in session.people.list(email=value):
-            return CiscoWebexTeamsPerson(person)
-        return CiscoWebexTeamsPerson()
+        for person in bot.session.people.list(email=value):
+            return CiscoWebexTeamsPerson(bot, person)
+
+        raise FailedToFindWebexTeamsPerson(f'Could not find the user {value}')
 
     @classmethod
     def find_using_name(cls, session, value):
@@ -524,7 +528,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         :param strrep: The ID of the Cisco Webex Teams person
         :return: CiscoWebexTeamsPerson
         """
-        return self.create_person_using_id(strrep)
+        return CiscoWebexTeamsPerson.find_using_email(self, strrep)
 
     def query_room(self, room):
         """
