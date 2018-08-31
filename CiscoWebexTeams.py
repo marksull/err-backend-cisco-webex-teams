@@ -53,9 +53,9 @@ class CiscoWebexTeamsPerson(Person):
     """
     A Cisco Webex Teams Person
     """
-    def __init__(self, bot, attributes=None):
+    def __init__(self, backend, attributes=None):
 
-        self._bot = bot
+        self._backend = backend
         attributes = attributes or {}
 
         if isinstance(attributes, ciscosparkapi.Person):
@@ -83,6 +83,7 @@ class CiscoWebexTeamsPerson(Person):
     def email(self):
       if type(self.emails) is list:
         if len(self.emails):
+          # Note sure why a person can have multiple email addresses
           return self.emails[0]
 
       return None
@@ -107,52 +108,39 @@ class CiscoWebexTeamsPerson(Person):
     def avatar(self):
         return self.teams_person.avatar
 
-    @staticmethod
-    def build_from_json(obj):
-        return CiscoWebexTeamsPerson(ciscosparkapi.Person(obj))
-
-    @classmethod
-    def find_using_email(cls, bot, value):
+    def find_using_email(self):
         """
         Return the FIRST Cisco Webex Teams person found when searching using an email address
-
-        :param bot: The bot
-        :param value: the value to search for
-        :return: A CiscoWebexTeamsPerson
         """
-        for person in bot.session.people.list(email=value):
-            return CiscoWebexTeamsPerson(bot, person)
+        for person in self._backend.session.people.list(email=self.email):
+            self.teams_person = person
+            return
 
-        raise FailedToFindWebexTeamsPerson(f'Could not find the user {value}')
+        raise FailedToFindWebexTeamsPerson(f'Could not find a user using the email address {self.email}')
 
-    @classmethod
-    def find_using_name(cls, session, value):
+    def find_using_name(self):
         """
         Return the FIRST Cisco Webex Teams person found when searching using the display name
-
-        :param session: The CiscoSparkAPI session handle
-        :param value: the value to search for
-        :return: A CiscoWebexTeamsPerson
         """
-        for person in session.people.list(displayName=value):
-            return CiscoWebexTeamsPerson(person)
-        return CiscoWebexTeamsPerson()
+        for person in self._backend.session.people.list(displayName=self.displayName):
+            self.teams_person = person
+            return
 
-    @classmethod
-    def get_using_id(cls, session, value):
+        raise FailedToFindWebexTeamsPerson(f'Could not find the user using the displayName {self.displayName}')
+
+    def get_using_id(self):
         """
         Return a Cisco Webex Teams person when searching using an ID
-
-        :param session: The CiscoSparkAPI session handle
-        :param value: the Spark ID
-        :return: A CiscoWebexTeamsPerson
         """
-        return CiscoWebexTeamsPerson(session.people.get(value))
+        try:
+            self._backend.session.people.get(self.id)
+        except:
+          raise FailedToFindWebexTeamsPerson(f'Could not find the user using the id {self.id}')
 
     def load(self):
-        self.teams_person = self._bot.session.Person(self.id)
+        self.teams_person = self._backend.session.Person(self.id)
 
-    # Err API
+    # Required by the Err API
 
     @property
     def person(self):
@@ -401,7 +389,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         Create an errbot message object
         """
-        person = CiscoWebexTeamsPerson(bot=self)
+        person = CiscoWebexTeamsPerson(self)
         person.id = message.id
         person.email = message.personEmail
 
@@ -410,35 +398,6 @@ class CiscoWebexTeamsBackend(ErrBot):
         msg = self.create_message(body=message.markdown or message.text, frm=occupant, to=room,
                                   extras={'roomType': message.roomType})
         return msg
-
-    def get_person_using_email(self, email):
-        """
-        Loads a person from Spark using the email address for the search criteria
-
-        :param email: The email address to use for the search
-        :return: CiscoWebexTeamsPerson
-        """
-        return CiscoWebexTeamsPerson.find_using_email(self.api, email)
-
-    def get_person_using_id(self, id):
-        """
-        Loads a person from Spark using the spark id for the search criteria
-
-        :param id: The spark id to use for the search
-        :return: CiscoWebexTeamsPerson
-        """
-        return CiscoWebexTeamsPerson.get_using_id(self.api, id)
-
-    def create_person_using_id(self, id):
-        """
-        Create a new person and sets the ID. This method DOES NOT load the person details from Webex Teams
-
-        :param id: The Webex Teams id of the person
-        :return: CiscoWebexTeamsPerson
-        """
-        person = CiscoWebexTeamsPerson(self)
-        person.id = id
-        return person
 
     def get_room_using_id(self, id):
         """
@@ -528,12 +487,15 @@ class CiscoWebexTeamsBackend(ErrBot):
 
     def build_identifier(self, strrep):
         """
-        Build an errbot identifier using the Webex Teams ID of the person
+        Build an errbot identifier using the Webex Teams email address of the person
 
-        :param strrep: The ID of the Cisco Webex Teams person
+        :param strrep: The email address of the Cisco Webex Teams person
         :return: CiscoWebexTeamsPerson
         """
-        return CiscoWebexTeamsPerson.find_using_email(self, strrep)
+        person = CiscoWebexTeamsPerson(self)
+        person.email = strrep
+        person.find_using_email()
+        return person
 
     def query_room(self, room):
         """
@@ -602,11 +564,12 @@ class CiscoWebexTeamsBackend(ErrBot):
                         while True:
                             message = await ws.recv()
                             logging.debug("WebSocket Received Message(raw): %s\n" % message)
-                            try:
-                                loop = asyncio.get_event_loop()
-                                loop.run_in_executor(None, self.process_websocket, message)
-                            except:
-                                logging.warning('An exception occurred while processing message. Ignoring. ')
+                            # try:
+                            #     loop = asyncio.get_event_loop()
+                            #     loop.run_in_executor(None, self.process_websocket, message)
+                            self.process_websocket(message)
+                            # except:
+                            #     logging.warning('An exception occurred while processing message. Ignoring. ')
 
                 asyncio.get_event_loop().run_until_complete(_run())
         except KeyboardInterrupt:
