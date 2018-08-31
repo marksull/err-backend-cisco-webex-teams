@@ -174,7 +174,7 @@ class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
     """
     A Cisco Webex Teams Person that Occupies a Cisco Webex Teams Room
     """
-    def __init__(self, bot, room=None, person=None):
+    def __init__(self, backend, room=None, person=None):
 
         room = room or {}
         person = person or {}
@@ -182,7 +182,7 @@ class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
         if isinstance(room, CiscoWebexTeamsRoom):
             self._room = room
         else:
-            self._room = CiscoWebexTeamsRoom(bot, room)
+            self._room = CiscoWebexTeamsRoom(backend, room)
 
         if isinstance(person, CiscoWebexTeamsPerson):
             self.teams_person = person
@@ -394,8 +394,11 @@ class CiscoWebexTeamsBackend(ErrBot):
         person.email = message.personEmail
 
         room = self.create_room_using_id(message.roomId)
-        occupant = self.get_occupant_using_id(person=person, room=room)
-        msg = self.create_message(body=message.markdown or message.text, frm=occupant, to=room,
+        occupant = CiscoWebexTeamsRoomOccupant(self, person=person, room=room)
+
+        msg = self.create_message(body=message.markdown or message.text,
+                                  frm=occupant,
+                                  to=room,
                                   extras={'roomType': message.roomType})
         return msg
 
@@ -438,16 +441,6 @@ class CiscoWebexTeamsBackend(ErrBot):
         :return: Message
         """
         return self.session.messages.get(id)
-
-    def get_occupant_using_id(self, person, room):
-        """
-        Builds a CiscoWebexTeamsRoomOccupant using a person and a room
-
-        :param person: A CiscoWebexTeamsPerson
-        :param room: A CiscoWebexTeamsRoom
-        :return: CiscoWebexTeamsRoomOccupant
-        """
-        return CiscoWebexTeamsRoomOccupant(bot=self, person=person, room=room)
 
     @property
     def session(self):
