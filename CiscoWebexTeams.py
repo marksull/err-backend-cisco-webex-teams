@@ -53,9 +53,10 @@ class CiscoWebexTeamsPerson(Person):
     """
     A Cisco Webex Teams Person
     """
-    def __init__(self, bot, attributes={}):
+    def __init__(self, bot, attributes=None):
 
         self._bot = bot
+        attributes = attributes or {}
 
         if isinstance(attributes, ciscosparkapi.Person):
             self.teams_person = attributes
@@ -185,7 +186,10 @@ class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
     """
     A Cisco Webex Teams Person that Occupies a Cisco Webex Teams Room
     """
-    def __init__(self, bot, room={}, person={}):
+    def __init__(self, bot, room=None, person=None):
+
+        room = room or {}
+        person = person or {}
 
         if isinstance(room, CiscoWebexTeamsRoom):
             self._room = room
@@ -207,11 +211,12 @@ class CiscoWebexTeamsRoom(Room):
     A Cisco Webex Teams Room
     """
 
-    def __init__(self, bot, val={}):
+    def __init__(self, bot, val=None):
 
         self._bot = bot
         self._webhook = None
         self._occupants = []
+        val = val or {}
 
         if isinstance(val, ciscosparkapi.Room):
             self.teams_room = val
