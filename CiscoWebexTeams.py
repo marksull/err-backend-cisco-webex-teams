@@ -7,7 +7,7 @@ import websockets
 from markdown import markdown
 
 from errbot.core import ErrBot
-from errbot.backends.base import Message, Person, Room, RoomOccupant
+from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE
 from errbot import rendering
 
 import ciscosparkapi
@@ -458,7 +458,7 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         :param mess: A CiscoWebexTeamsMessage
         """
-        # Need to strip out markdown - extra as not supported by Webex Teams
+        # Need to strip out "markdown extra" as not supported by Webex Teams
         md = markdown(self.md.convert(mess.body),
                       extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
 
@@ -524,7 +524,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         finally:
             self.disconnect_callback()
 
-    def change_presence(self, status, message):
+    def change_presence(self, status=OFFLINE, message=''):
         """
         Backend: Change presence yet to be implemented
 
