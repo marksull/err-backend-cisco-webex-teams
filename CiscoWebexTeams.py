@@ -524,6 +524,31 @@ class CiscoWebexTeamsBackend(ErrBot):
         finally:
             self.disconnect_callback()
 
+    def _get_device_info(self):
+        """
+        Setup device in Webex Teams to bridge events across websocket
+        :return:
+        """
+        logging.debug('Getting device list from Webex Teams')
+
+        try:
+            resp = self.webex_teams_api._session.get(DEVICES_URL)
+            for device in resp['devices']:
+                if device['name'] == DEVICE_DATA['name']:
+                    self.device_info = device
+                    return device
+        except ciscosparkapi.SparkApiError:
+            pass
+
+        logging.info('Device does not exist in Webex Teams, creating')
+
+        resp = self.webex_teams_api._session.post(DEVICES_URL, json=DEVICE_DATA)
+        if resp is None:
+            raise FailedToCreateWebexDevice("Could not create Webex Teams device using {}".format(DEVICES_URL))
+
+        self.device_info = resp
+        return resp
+
     def change_presence(self, status=OFFLINE, message=''):
         """
         Backend: Change presence yet to be implemented
@@ -591,29 +616,3 @@ class CiscoWebexTeamsBackend(ErrBot):
         :return: Either the value of the key or None if the key is not found
         """
         return self.recall(id).get(key)
-
-    def _get_device_info(self):
-        """
-        Setup device in Webex Teams to bridge events across websocket
-        :return:
-        """
-        logging.debug('Getting device list from Webex Teams')
-
-        try:
-            resp = self.webex_teams_api._session.get(DEVICES_URL)
-            for device in resp['devices']:
-                if device['name'] == DEVICE_DATA['name']:
-                    self.device_info = device
-                    return device
-        except ciscosparkapi.SparkApiError:
-            pass
-
-        logging.info('Device does not exist in Webex Teams, creating')
-
-        resp = self.webex_teams_api._session.post(DEVICES_URL, json=DEVICE_DATA)
-        if resp is None:
-            raise FailedToCreateWebexDevice("Could not create Webex Teams device using {}".format(DEVICES_URL))
-
-        self.device_info = resp
-        return resp
-
