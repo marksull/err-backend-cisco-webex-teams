@@ -10,7 +10,7 @@ from errbot.core import ErrBot
 from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE
 from errbot import rendering
 
-import ciscosparkapi
+import webexteamssdk
 
 log = logging.getLogger('errbot.backends.CiscoWebexTeams')
 
@@ -63,10 +63,10 @@ class CiscoWebexTeamsPerson(Person):
         self._backend = backend
         attributes = attributes or {}
 
-        if isinstance(attributes, ciscosparkapi.Person):
+        if isinstance(attributes, webexteamssdk.Person):
             self.teams_person = attributes
         else:
-            self.teams_person = ciscosparkapi.Person(attributes)
+            self.teams_person = webexteamssdk.Person(attributes)
 
     @property
     def id(self):
@@ -206,10 +206,10 @@ class CiscoWebexTeamsRoom(Room):
         self._occupants = []
         val = val or {}
 
-        if isinstance(val, ciscosparkapi.Room):
+        if isinstance(val, webexteamssdk.Room):
             self.teams_room = val
         else:
-            self.teams_room = ciscosparkapi.Room(val)
+            self.teams_room = webexteamssdk.Room(val)
 
     @property
     def sipAddress(self):
@@ -259,7 +259,7 @@ class CiscoWebexTeamsRoom(Room):
                                                              self.title,
                                                              self.id))
 
-        except ciscosparkapi.exceptions.SparkApiError as error:
+        except webexteamssdk.exceptions.SparkApiError as error:
             # API now returning a 403 when trying to add user to a direct conversation and they are already in the
             # conversation. For groups if the user is already a member a 409 is returned.
             if error.response.status_code == 403 or error.response.status_code == 409:
@@ -344,7 +344,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             config.MESSAGE_SIZE_LIMIT = CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
 
         log.debug("Setting up SparkAPI")
-        self.webex_teams_api = ciscosparkapi.CiscoSparkAPI(access_token=self._bot_token)
+        self.webex_teams_api = webexteamssdk.WebexTeamsAPI(access_token=self._bot_token)
 
         log.debug("Setting up device on Webex Teams")
         self.device_info = self._get_device_info()
@@ -539,7 +539,7 @@ class CiscoWebexTeamsBackend(ErrBot):
                 if device['name'] == DEVICE_DATA['name']:
                     self.device_info = device
                     return device
-        except ciscosparkapi.SparkApiError:
+        except webexteamssdk.ApiError:
             pass
 
         logging.info('Device does not exist in Webex Teams, creating')
