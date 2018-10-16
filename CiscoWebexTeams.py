@@ -273,7 +273,7 @@ class CiscoWebexTeamsRoom(Room):
             # API now returning a 403 when trying to add user to a direct conversation and they are already in the
             # conversation. For groups if the user is already a member a 409 is returned.
             if error.response.status_code == 403 or error.response.status_code == 409:
-                log.debug('{self._bot.bot_identifier.displayName} is already a member of {self.title} ({self.id})')
+                log.debug(f'{self._bot.bot_identifier.displayName} is already a member of {self.title} ({self.id})')
             else:
                 log.exception(f'HTTP Exception: Failed to join room {self.title} ({self.id})')
                 return
