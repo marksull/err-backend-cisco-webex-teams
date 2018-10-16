@@ -293,8 +293,8 @@ class CiscoWebexTeamsRoom(Room):
         for email in email_addresses:
             self._bot.webex_teams_api.memberships.create(new_room.id, personEmail=email)
 
-        api.messages.create(new_room.id, text="Welcome to the room!")
-        log.debug(f'Create room: {new_room}')
+        self._bot.webex_teams_api.messages.create(roomId=new_room.id, text="Welcome to the room!")
+        log.debug(f'Created room: {new_room}')
 
     def destroy(self):
         log.debug("Destroy room yet to be implemented")  # TODO
