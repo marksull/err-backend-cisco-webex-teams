@@ -303,12 +303,12 @@ class CiscoWebexTeamsRoom(Room):
     @property
     def exists(self):
         rooms = self._bot.webex_teams_api.rooms.list()
-        return len([room for room in rooms if room_title == self.room.title]) > 0
+        return len([room for room in rooms if room.title == self.room.title]) > 0
 
     @property
     def joined(self):
         rooms = self._bot.webex_teams_api.rooms.list()
-        return len([room for room in rooms if room_title == room.title]) > 0
+        return len([room for room in rooms if room.title == room.title]) > 0
 
     @property
     def topic(self):
