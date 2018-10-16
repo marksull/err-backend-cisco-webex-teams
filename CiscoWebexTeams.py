@@ -244,7 +244,7 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def title(self):
-        return self._title
+        return self._name
 
     def update_occupants(self):
 
@@ -265,7 +265,7 @@ class CiscoWebexTeamsRoom(Room):
             self._bot.webex_teams_api.memberships.create(self.id, self._bot.bot_identifier.id)
             log.debug(f'{self._bot.bot_identifier.displayName} is NOW a member of {self.title} ({self.id}')
 
-        except webexteamssdk.exceptions.SparkApiError as error:
+        except webexteamssdk.exceptions.ApiError as error:
             # API now returning a 403 when trying to add user to a direct conversation and they are already in the
             # conversation. For groups if the user is already a member a 409 is returned.
             if error.response.status_code == 403 or error.response.status_code == 409:
