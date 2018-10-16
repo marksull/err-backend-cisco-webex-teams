@@ -43,7 +43,8 @@ BOT_IDENTITY = {
 
 ## Credit
 
-I unrestrainedly plagiarized from most of the already existing err backends and cgascoid's webesocket implementation.
+I unrestrainedly plagiarized from most of the already existing err backends and cgascoig's ciscospark-websocket implementation 
+(https://github.com/cgascoig/ciscospark-websocket).
 
 ## Contributing
 
