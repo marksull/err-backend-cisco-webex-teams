@@ -420,11 +420,8 @@ class CiscoWebexTeamsBackend(ErrBot):
         person.email = message.personEmail
 
         room = CiscoWebexTeamsRoom(room_id=message.roomId, bot=self)
-
         occupant = CiscoWebexTeamsRoomOccupant(self, person=person, room=room)
-        body = message.markdown or message.text
-        body = ' '.join(body.split()[1:])
-        msg = CiscoWebexTeamsMessage(body=body,
+        msg = CiscoWebexTeamsMessage(body=message.markdown or message.text,
                                      frm=occupant,
                                      to=room,
                                      extras={'roomType': message.roomType})
