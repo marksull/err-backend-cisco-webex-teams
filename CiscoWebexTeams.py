@@ -201,8 +201,10 @@ class CiscoWebexTeamsRoom(Room):
     A Cisco Webex Teams Room
     """
     def __init__(self, room_id=None, room_title=None, bot=None):
+
         if room_id is not None and room_title is not None:
             raise ValueError("room_id and room_title are mutually exclusive")
+
         if not room_id  and not room_title:
             raise ValueError("room_id or room_title is needed")
 
@@ -214,6 +216,7 @@ class CiscoWebexTeamsRoom(Room):
         self._bot = bot
         self._id = None
         self._occupants = []
+
     @property
     def _room(self):
         """
@@ -224,6 +227,7 @@ class CiscoWebexTeamsRoom(Room):
 
         if not len(room) > 0:
             raise RoomDoesNotExistError(f'No room with {self} exists.')
+
         # TODO: not sure room title will duplicate
         return room[0]
 
@@ -285,6 +289,7 @@ class CiscoWebexTeamsRoom(Room):
     def create(self):
         new_room = self._bot.webex_teams_api.rooms.create(self.title)
         email_addresses = [self._bot.bot_identifier.id]
+
         for email in email_addresses:
             self._bot.webex_teams_api.memberships.create(new_room.id, personEmail=email)
 
