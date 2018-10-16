@@ -287,6 +287,9 @@ class CiscoWebexTeamsRoom(Room):
         pass
 
     def create(self):
+        """
+        Create a new room
+        """
         new_room = self._bot.webex_teams_api.rooms.create(self.title)
         email_addresses = [self._bot.bot_identifier.id]
 
