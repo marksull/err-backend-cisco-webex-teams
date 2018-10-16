@@ -7,7 +7,7 @@ import websockets
 from markdown import markdown
 
 from errbot.core import ErrBot
-from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE
+from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE, RoomDoesNotExistError
 from errbot import rendering
 
 import webexteamssdk
