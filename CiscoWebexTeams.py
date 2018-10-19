@@ -472,17 +472,31 @@ class CiscoWebexTeamsBackend(ErrBot):
         person.find_using_email()
         return person
 
-    def query_room(self, room):
+    def query_room(self, room_id_or_name):
         """
-        Create a CiscoWebexTeamsRoom object identified by the ID of the room
+        Create a CiscoWebexTeamsRoom object identified by the ID or name of the room
 
-        :param room: The Cisco Webex Teams room ID
-        :return: CiscoWebexTeamsRoom object
+        :param room_id_or_name:
+            The Cisco Webex Teams room ID or a room name
+        :return:
+            :class: CiscoWebexTeamsRoom
+        :raises:
+            :class:`~errbot.backends.base.RoomDoesNotExistError` if the room doesn't exist.
         """
-        if isinstance(room, webexteamssdk.Room):
-            return CiscoWebexTeamsRoom(room_id=room.id, bot=self)
+        if isinstance(room_id_or_name, webexteamssdk.Room):
+            return CiscoWebexTeamsRoom(room_id=room_id_or_name.id, bot=self)
 
-        return CiscoWebexTeamsRoom(room_id=room, bot=self)
+        # query_room can provide us either a room name of an ID, so we need to check
+        # for both
+        room = CiscoWebexTeamsRoom(room_id=room_id_or_name, bot=self)
+
+        if not room.exists:
+            room = CiscoWebexTeamsRoom(room_title=room_id_or_name, bot=self)
+
+        if not room.exists:
+            raise RoomDoesNotExistError(f'The room {room_id_or_name} does not exist')
+
+        return room
 
     def send_message(self, mess):
         """
