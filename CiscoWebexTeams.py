@@ -494,7 +494,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             room = CiscoWebexTeamsRoom(backend=self, room_title=room_id_or_name)
 
         if not room.exists:
-            raise RoomDoesNotExistError(f'The room {room_id_or_name} does not exist')
+            raise RoomDoesNotExistError(f'The room {room_id_or_name} does not exist, or the bot is not a member')
 
         return room
 
