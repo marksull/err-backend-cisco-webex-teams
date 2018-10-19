@@ -288,16 +288,12 @@ class CiscoWebexTeamsRoom(Room):
 
     def create(self):
         """
-        Create a new room
+        Create a new room. Membership to the room is provide by default.
         """
-        new_room = self._backend.webex_teams_api.rooms.create(self.title)
-        email_addresses = [self._backend.bot_identifier.id]
-
-        for email in email_addresses:
-            self._backend.webex_teams_api.memberships.create(new_room.id, personEmail=email)
-
-        self._backend.webex_teams_api.messages.create(roomId=new_room.id, text="Welcome to the room!")
-        log.debug(f'Created room: {new_room}')
+        self._room = self._backend.webex_teams_api.rooms.create(self.title)
+        self._room_id = self._room.id
+        self._backend.webex_teams_api.messages.create(roomId=self._room_id, text="Welcome to the room!")
+        log.debug(f'Created room: {self.title}')
 
     def destroy(self):
         log.debug("Destroy room yet to be implemented")  # TODO
@@ -347,7 +343,7 @@ class CiscoWebexTeamsRoom(Room):
         return str(self) == str(other)
 
     def __unicode__(self):
-        return self.id
+        return self.title
 
     __str__ = __unicode__
 
