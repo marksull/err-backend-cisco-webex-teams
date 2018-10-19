@@ -445,11 +445,12 @@ class CiscoWebexTeamsBackend(ErrBot):
 
     def rooms(self):
         """
-        Backend: Rooms yet to be implemented
+        Backend: Rooms that the bot is a member of
 
         :return:
+            List of rooms
         """
-        return self.webex_teams_api.rooms.list()
+        return [f"{room.title} ({room.type})" for room in self.webex_teams_api.rooms.list()]
 
     def contacts(self):
         """
