@@ -324,7 +324,10 @@ class CiscoWebexTeamsRoom(Room):
         occupants = []
 
         for person in self._bot.webex_teams_api.memberships.list(roomId=self.id):
-            occupants.append(CiscoWebexTeamsRoomOccupant(backend=self._bot, room=self, person=person.to_json()))
+            p = CiscoWebexTeamsPerson(backend=self._bot)
+            p.id = person.personId
+            p.email = person.personEmail
+            occupants.append(CiscoWebexTeamsRoomOccupant(backend=self._bot, room=self, person=p))
 
         log.debug("Total occupants for room {} ({}) is {} ".format(self.title, self.id, len(occupants)))
 
