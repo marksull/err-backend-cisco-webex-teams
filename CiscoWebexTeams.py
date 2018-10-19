@@ -184,7 +184,7 @@ class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
         if isinstance(room, CiscoWebexTeamsRoom):
             self._room = room
         else:
-            self._room = CiscoWebexTeamsRoom(bot=backend, room_id=room)
+            self._room = CiscoWebexTeamsRoom(backend=backend, room_id=room)
 
         if isinstance(person, CiscoWebexTeamsPerson):
             self.teams_person = person
@@ -200,9 +200,9 @@ class CiscoWebexTeamsRoom(Room):
     """
     A Cisco Webex Teams Room
     """
-    def __init__(self, room_id=None, room_title=None, bot=None):
+    def __init__(self, backend, room_id=None, room_title=None, ):
 
-        self._bot = bot
+        self._backend = backend
 
         if room_id is not None and room_title is not None:
             raise ValueError("room_id and room_title are mutually exclusive")
@@ -219,7 +219,7 @@ class CiscoWebexTeamsRoom(Room):
         """
         Load a room object from a title
         """
-        rooms = self._bot.webex_teams_api.rooms.list()
+        rooms = self._backend.webex_teams_api.rooms.list()
         room = [room for room in rooms if room.title == title]
 
         if not len(room) > 0:
@@ -233,7 +233,7 @@ class CiscoWebexTeamsRoom(Room):
         Load a room object from a webex room id. If no room is found, return a new Room object.
         """
         try:
-            room = self._bot.webex_teams_api.rooms.get(id)
+            room = self._backend.webex_teams_api.rooms.get(id)
         except webexteamssdk.exceptions.ApiError:
             room = webexteamssdk.models.immutable.Room({})
 
@@ -263,14 +263,14 @@ class CiscoWebexTeamsRoom(Room):
 
         log.debug(f'Joining room {self.title} ({self.id})')
         try:
-            self._bot.webex_teams_api.memberships.create(self.id, self._bot.bot_identifier.id)
-            log.debug(f'{self._bot.bot_identifier.displayName} is NOW a member of {self.title} ({self.id}')
+            self._backend.webex_teams_api.memberships.create(self.id, self._backend.bot_identifier.id)
+            log.debug(f'{self._backend.bot_identifier.displayName} is NOW a member of {self.title} ({self.id}')
 
         except webexteamssdk.exceptions.ApiError as error:
             # API now returning a 403 when trying to add user to a direct conversation and they are already in the
             # conversation. For groups if the user is already a member a 409 is returned.
             if error.response.status_code == 403 or error.response.status_code == 409:
-                log.debug(f'{self._bot.bot_identifier.displayName} is already a member of {self.title} ({self.id})')
+                log.debug(f'{self._backend.bot_identifier.displayName} is already a member of {self.title} ({self.id})')
             else:
                 log.exception(f'HTTP Exception: Failed to join room {self.title} ({self.id})')
                 return
@@ -287,13 +287,13 @@ class CiscoWebexTeamsRoom(Room):
         """
         Create a new room
         """
-        new_room = self._bot.webex_teams_api.rooms.create(self.title)
-        email_addresses = [self._bot.bot_identifier.id]
+        new_room = self._backend.webex_teams_api.rooms.create(self.title)
+        email_addresses = [self._backend.bot_identifier.id]
 
         for email in email_addresses:
-            self._bot.webex_teams_api.memberships.create(new_room.id, personEmail=email)
+            self._backend.webex_teams_api.memberships.create(new_room.id, personEmail=email)
 
-        self._bot.webex_teams_api.messages.create(roomId=new_room.id, text="Welcome to the room!")
+        self._backend.webex_teams_api.messages.create(roomId=new_room.id, text="Welcome to the room!")
         log.debug(f'Created room: {new_room}')
 
     def destroy(self):
@@ -306,7 +306,7 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def joined(self):
-        rooms = self._bot.webex_teams_api.rooms.list()
+        rooms = self._backend.webex_teams_api.rooms.list()
         return len([room for room in rooms if room.title == room.title]) > 0
 
     @property
@@ -323,11 +323,11 @@ class CiscoWebexTeamsRoom(Room):
 
         occupants = []
 
-        for person in self._bot.webex_teams_api.memberships.list(roomId=self.id):
-            p = CiscoWebexTeamsPerson(backend=self._bot)
+        for person in self._backend.webex_teams_api.memberships.list(roomId=self.id):
+            p = CiscoWebexTeamsPerson(backend=self._backend)
             p.id = person.personId
             p.email = person.personEmail
-            occupants.append(CiscoWebexTeamsRoomOccupant(backend=self._bot, room=self, person=p))
+            occupants.append(CiscoWebexTeamsRoomOccupant(backend=self._backend, room=self, person=p))
 
         log.debug("Total occupants for room {} ({}) is {} ".format(self.title, self.id, len(occupants)))
 
@@ -425,7 +425,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         person.id = message.id
         person.email = message.personEmail
 
-        room = CiscoWebexTeamsRoom(room_id=message.roomId, bot=self)
+        room = CiscoWebexTeamsRoom(backend=self, room_id=message.roomId)
         occupant = CiscoWebexTeamsRoomOccupant(self, person=person, room=room)
         msg = CiscoWebexTeamsMessage(body=message.markdown or message.text,
                                      frm=occupant,
@@ -484,14 +484,14 @@ class CiscoWebexTeamsBackend(ErrBot):
             :class:`~errbot.backends.base.RoomDoesNotExistError` if the room doesn't exist.
         """
         if isinstance(room_id_or_name, webexteamssdk.Room):
-            return CiscoWebexTeamsRoom(room_id=room_id_or_name.id, bot=self)
+            return CiscoWebexTeamsRoom(backend=self, room_id=room_id_or_name.id)
 
         # query_room can provide us either a room name of an ID, so we need to check
         # for both
-        room = CiscoWebexTeamsRoom(room_id=room_id_or_name, bot=self)
+        room = CiscoWebexTeamsRoom(backend=self, room_id=room_id_or_name)
 
         if not room.exists:
-            room = CiscoWebexTeamsRoom(room_title=room_id_or_name, bot=self)
+            room = CiscoWebexTeamsRoom(backend=self, room_title=room_id_or_name)
 
         if not room.exists:
             raise RoomDoesNotExistError(f'The room {room_id_or_name} does not exist')
