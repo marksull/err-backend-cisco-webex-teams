@@ -200,9 +200,12 @@ class CiscoWebexTeamsRoom(Room):
     """
     A Cisco Webex Teams Room
     """
-    def __init__(self, backend, room_id=None, room_title=None, ):
+    def __init__(self, backend, room_id=None, room_title=None):
 
         self._backend = backend
+        self._room_id = room_id
+        self._room_title = room_title
+        self._room = None
 
         if room_id is not None and room_title is not None:
             raise ValueError("room_id and room_title are mutually exclusive")
@@ -211,42 +214,42 @@ class CiscoWebexTeamsRoom(Room):
             raise ValueError("room_id or room_title is needed")
 
         if room_title is not None:
-            self._room = self.load_room_from_title(room_title)
+            self.load_room_from_title()
         else:
-            self._room = self.load_room_from_id(room_id)
+            self.load_room_from_id()
 
-    def load_room_from_title(self, title):
+    def load_room_from_title(self):
         """
-        Load a room object from a title
+        Load a room object from a title. If no room is found, return a new Room object.
         """
         rooms = self._backend.webex_teams_api.rooms.list()
-        room = [room for room in rooms if room.title == title]
+        room = [room for room in rooms if room.title == self._room_title]
 
         if not len(room) > 0:
-            return webexteamssdk.models.immutable.Room({})
+            self._room = webexteamssdk.models.immutable.Room({})
+        else:
+            # TODO: not sure room title will duplicate
+            self._room = room[0]
+            self._room_id = self._room.id
 
-        # TODO: not sure room title will duplicate
-        return room[0]
-
-    def load_room_from_id(self, id):
+    def load_room_from_id(self):
         """
         Load a room object from a webex room id. If no room is found, return a new Room object.
         """
         try:
-            room = self._backend.webex_teams_api.rooms.get(id)
+            self._room = self._backend.webex_teams_api.rooms.get(self._room_id)
+            self._room_title = self._room.title
         except webexteamssdk.exceptions.ApiError:
-            room = webexteamssdk.models.immutable.Room({})
-
-        return room
+            self._room = webexteamssdk.models.immutable.Room({})
 
     @property
     def id(self):
         """Return the ID of this room"""
-        return self._room.id
+        return self._room_id
 
     @property
     def room(self):
-        """Return the webexteamsapi Room"""
+        """Return the webexteamssdk.models.immutable.Room instance"""
         return self._room
 
     @property
@@ -255,7 +258,7 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def title(self):
-        return self._room.title
+        return self._room_title
 
     # Errbot API
 
@@ -320,6 +323,9 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def occupants(self):
+
+        if not self.exists:
+            raise RoomDoesNotExistError(f"Room {self.title or self.id} does not exist, or the bot does not have access")
 
         occupants = []
 
@@ -481,8 +487,6 @@ class CiscoWebexTeamsBackend(ErrBot):
             The Cisco Webex Teams room ID or a room name
         :return:
             :class: CiscoWebexTeamsRoom
-        :raises:
-            :class:`~errbot.backends.base.RoomDoesNotExistError` if the room doesn't exist.
         """
         if isinstance(room_id_or_name, webexteamssdk.Room):
             return CiscoWebexTeamsRoom(backend=self, room_id=room_id_or_name.id)
@@ -493,9 +497,6 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         if not room.exists:
             room = CiscoWebexTeamsRoom(backend=self, room_title=room_id_or_name)
-
-        if not room.exists:
-            raise RoomDoesNotExistError(f'The room {room_id_or_name} does not exist, or the bot is not a member')
 
         return room
 
