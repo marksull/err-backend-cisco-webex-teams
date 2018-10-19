@@ -227,6 +227,7 @@ class CiscoWebexTeamsRoom(Room):
 
         if not len(room) > 0:
             self._room = webexteamssdk.models.immutable.Room({})
+            self._room_id = None
         else:
             # TODO: not sure room title will duplicate
             self._room = room[0]
@@ -296,8 +297,14 @@ class CiscoWebexTeamsRoom(Room):
         log.debug(f'Created room: {self.title}')
 
     def destroy(self):
-        log.debug("Destroy room yet to be implemented")  # TODO
-        pass
+        """
+        Destroy (delete) a room
+        :return:
+        """
+        self._backend.webex_teams_api.rooms.delete(self.id)
+        # We want to re-init this room so that is accurately reflects that is no longer exists
+        self.load_room_from_title()
+        log.debug(f'Deleted room: {self.title}')
 
     @property
     def exists(self):
