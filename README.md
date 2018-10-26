@@ -35,10 +35,27 @@ BOT_EXTRA_BACKEND_DIR = '/path_to/err-backend-cisco-webex-teams'
 To configure the bot you will need a Bot TOKEN. If you don't already have a bot setup on Cisco Webex Teams  details can
 be found here: https://developer.webex.com/bots.html.
 
-```
+```python
 BOT_IDENTITY = {
     'TOKEN': '<insert your token in here>',
 }
+```
+
+In a Webex Teams GROUP room (more than two people), to direct a command to the bot you need to prefix it with the name of the
+bot as you would any other person in the room (for example, type @ and select the bot name). 
+As Webex Teams will prefix the command with this name it is important that it is stripped from the 
+incoming command for it to be processed correctly. To achieve this add your bot name 
+(exactly as configured in Webex Teams) to the BOT_PREFIX:
+
+```python
+BOT_PREFIX = 'my-webex-teams-bot-name '
+```
+
+In a Webex Teams DIRECT room chat with the bot the bot prefix is not sent with the command. Ensure
+to enable BOT_PREFIX_OPTIONAL_ON_CHAT so that the prefix is not required for direct communication:
+
+```python
+BOT_PREFIX_OPTIONAL_ON_CHAT = True
 ```
 
 ## Credit
