@@ -1,4 +1,5 @@
 import asyncio
+import copyreg
 import json
 import sys
 import logging
@@ -393,6 +394,8 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         log.debug("Done! I'm connected as {}".format(self.bot_identifier.email))
 
+        self._register_identifiers_pickling()
+
     @property
     def mode(self):
         return 'CiscoWebexTeams'
@@ -666,3 +669,19 @@ class CiscoWebexTeamsBackend(ErrBot):
         :return: Either the value of the key or None if the key is not found
         """
         return self.recall(id).get(key)
+
+    @staticmethod
+    def _unpickle_identifier(identifier_str):
+        return CiscoWebexTeamsBackend.__build_identifier(identifier_str)
+
+    @staticmethod
+    def _pickle_identifier(identifier):
+        return CiscoWebexTeamsBackend._unpickle_identifier, (str(identifier),)
+
+    def _register_identifiers_pickling(self):
+        """
+        Register identifiers pickling.
+        """
+        CiscoWebexTeamsBackend.__build_identifier = self.build_identifier
+        for cls in (CiscoWebexTeamsPerson, CiscoWebexTeamsRoomOccupant, CiscoWebexTeamsRoom):
+            copyreg.pickle(cls, CiscoWebexTeamsBackend._pickle_identifier, CiscoWebexTeamsBackend._unpickle_identifier)
