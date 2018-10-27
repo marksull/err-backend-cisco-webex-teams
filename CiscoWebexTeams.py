@@ -346,7 +346,7 @@ class CiscoWebexTeamsRoom(Room):
         log.debug("Invite room yet to be implemented")  # TODO
         pass
 
-    def __eq_(self, other):
+    def __eq__(self, other):
         return str(self) == str(other)
 
     def __unicode__(self):
