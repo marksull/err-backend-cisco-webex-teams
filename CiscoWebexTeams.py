@@ -118,21 +118,23 @@ class CiscoWebexTeamsPerson(Person):
         """
         Return the FIRST Cisco Webex Teams person found when searching using an email address
         """
-        for person in self._backend.webex_teams_api.people.list(email=self.email):
-            self.teams_person = person
-            return
-
-        raise FailedToFindWebexTeamsPerson(f'Could not find a user using the email address {self.email}')
+        try:
+            for person in self._backend.webex_teams_api.people.list(email=self.email):
+                self.teams_person = person
+                return
+        except:
+            raise FailedToFindWebexTeamsPerson(f'Could not find a user using the email address {self.email}')
 
     def find_using_name(self):
         """
         Return the FIRST Cisco Webex Teams person found when searching using the display name
         """
-        for person in self._backend.webex_teams_api.people.list(displayName=self.displayName):
-            self.teams_person = person
-            return
-
-        raise FailedToFindWebexTeamsPerson(f'Could not find the user using the displayName {self.displayName}')
+        try:
+            for person in self._backend.webex_teams_api.people.list(displayName=self.displayName):
+                self.teams_person = person
+                return
+        except:
+            raise FailedToFindWebexTeamsPerson(f'Could not find the user using the displayName {self.displayName}')
 
     def get_using_id(self):
         """
