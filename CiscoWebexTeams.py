@@ -1,4 +1,5 @@
 import asyncio
+import copyreg
 import json
 import sys
 import logging
@@ -117,21 +118,23 @@ class CiscoWebexTeamsPerson(Person):
         """
         Return the FIRST Cisco Webex Teams person found when searching using an email address
         """
-        for person in self._backend.webex_teams_api.people.list(email=self.email):
-            self.teams_person = person
-            return
-
-        raise FailedToFindWebexTeamsPerson(f'Could not find a user using the email address {self.email}')
+        try:
+            for person in self._backend.webex_teams_api.people.list(email=self.email):
+                self.teams_person = person
+                return
+        except:
+            raise FailedToFindWebexTeamsPerson(f'Could not find a user using the email address {self.email}')
 
     def find_using_name(self):
         """
         Return the FIRST Cisco Webex Teams person found when searching using the display name
         """
-        for person in self._backend.webex_teams_api.people.list(displayName=self.displayName):
-            self.teams_person = person
-            return
-
-        raise FailedToFindWebexTeamsPerson(f'Could not find the user using the displayName {self.displayName}')
+        try:
+            for person in self._backend.webex_teams_api.people.list(displayName=self.displayName):
+                self.teams_person = person
+                return
+        except:
+            raise FailedToFindWebexTeamsPerson(f'Could not find the user using the displayName {self.displayName}')
 
     def get_using_id(self):
         """
@@ -346,7 +349,7 @@ class CiscoWebexTeamsRoom(Room):
         log.debug("Invite room yet to be implemented")  # TODO
         pass
 
-    def __eq_(self, other):
+    def __eq__(self, other):
         return str(self) == str(other)
 
     def __unicode__(self):
@@ -392,6 +395,8 @@ class CiscoWebexTeamsBackend(ErrBot):
         self.bot_identifier = CiscoWebexTeamsPerson(self, self.webex_teams_api.people.me())
 
         log.debug("Done! I'm connected as {}".format(self.bot_identifier.email))
+
+        self._register_identifiers_pickling()
 
     @property
     def mode(self):
@@ -666,3 +671,19 @@ class CiscoWebexTeamsBackend(ErrBot):
         :return: Either the value of the key or None if the key is not found
         """
         return self.recall(id).get(key)
+
+    @staticmethod
+    def _unpickle_identifier(identifier_str):
+        return CiscoWebexTeamsBackend.__build_identifier(identifier_str)
+
+    @staticmethod
+    def _pickle_identifier(identifier):
+        return CiscoWebexTeamsBackend._unpickle_identifier, (str(identifier),)
+
+    def _register_identifiers_pickling(self):
+        """
+        Register identifiers pickling.
+        """
+        CiscoWebexTeamsBackend.__build_identifier = self.build_identifier
+        for cls in (CiscoWebexTeamsPerson, CiscoWebexTeamsRoomOccupant, CiscoWebexTeamsRoom):
+            copyreg.pickle(cls, CiscoWebexTeamsBackend._pickle_identifier, CiscoWebexTeamsBackend._unpickle_identifier)
