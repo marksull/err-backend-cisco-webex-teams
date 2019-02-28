@@ -5,6 +5,8 @@ import sys
 import logging
 import uuid
 import websockets
+import string
+import random
 from markdown import markdown
 
 from errbot.core import ErrBot
@@ -12,6 +14,8 @@ from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE, R
 from errbot import rendering
 
 import webexteamssdk
+
+__version__="1.0.0"
 
 log = logging.getLogger('errbot.backends.CiscoWebexTeams')
 
@@ -24,7 +28,7 @@ DEVICE_DATA = {
     "deviceType"    : "DESKTOP",
     "localizedModel": "python",
     "model"         : "python",
-    "name"          : "python-webex-teams-client",
+    "name"          : f"python-webex-teams-client-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}",
     "systemName"    : "python-webex-teams-client",
     "systemVersion" : "0.1"
 }
