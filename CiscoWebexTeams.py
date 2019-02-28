@@ -15,6 +15,8 @@ from errbot import rendering
 
 import webexteamssdk
 
+__version__="1.0.0"
+
 log = logging.getLogger('errbot.backends.CiscoWebexTeams')
 
 CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT = 7439
