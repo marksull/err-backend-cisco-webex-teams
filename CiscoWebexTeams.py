@@ -7,6 +7,7 @@ import uuid
 import websockets
 import string
 import random
+import os
 from markdown import markdown
 
 from errbot.core import ErrBot
@@ -526,6 +527,34 @@ class CiscoWebexTeamsBackend(ErrBot):
             self.webex_teams_api.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md)
         else:
             self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md)
+
+    def send_stream_request(self, identifier, fsource, name='file', size=None, stream_type=None):
+        """
+        Send a file to Cisco Webex Teams
+
+        :param identifer: PersonId or roomId
+        :param fsource: abosulte path to local file
+        :param name: filename
+        :param stream_type: MIME file type
+        """
+        # Let's make sure the file exists
+        if not os.path.isfile(fsource.name):
+            log.error("File {} does not exist.".format(fsource.name))
+
+        # Not a requirement but to be completely clear let's make sure we are using
+        # an absolute path.
+        abs_path = os.path.abspath(fsource.name)
+
+        # The files parameter expects to receive a list containing a single string with
+        # the path to the file to be uploaded.
+        file_list = [abs_path]
+        if type(identifier) == CiscoWebexTeamsPerson:
+            self.webex_teams_api.messages.create(toPersonId=identifier.id, files=file_list)
+        else:
+            self.webex_teams_api.messages.create(roomId=identifier.room.id, files=file_list)
+        log.info("File {} was sent.".format(fsource.name))
+        # Not implemented: return stream objects
+        return None
 
     def build_reply(self, mess, text=None, private=False, threaded=False):
         """
