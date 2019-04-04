@@ -6,4 +6,4 @@ Module = CiscoWebexTeams
 Description = This is a backend implementation for Cisco Webex Teams
 
 [Python]
-Version = 3.6+
+Version = 3.6.0
