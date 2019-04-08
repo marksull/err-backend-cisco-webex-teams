@@ -11,7 +11,7 @@ import os
 from markdown import markdown
 
 from errbot.core import ErrBot
-from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE, RoomDoesNotExistError
+from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE, RoomDoesNotExistError, Stream
 from errbot import rendering
 
 import webexteamssdk
@@ -528,33 +528,46 @@ class CiscoWebexTeamsBackend(ErrBot):
         else:
             self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md)
 
+    def _teams_upload(self, stream):
+        """
+        Performs an upload defined in a stream
+        :param stream: Stream object
+        :return: None
+        """
+
+        try:
+            stream.accept()
+            log.exception(f'Upload of {stream.raw.name} to {stream.identifier} has started.')
+
+            if type(stream.identifier) == CiscoWebexTeamsPerson:
+                self.webex_teams_api.messages.create(toPersonId=stream.identifier.id, files=[stream.raw.name])
+            else:
+                self.webex_teams_api.messages.create(roomId=stream.identifier.room.id, files=[stream.raw.name])
+
+            stream.success()
+            log.exception(f'Upload of {stream.raw.name} to {stream.identifier} has completed.')
+
+        except Exception:
+            stream.error()
+            log.exception(f'Upload of {stream.raw.name} to {stream.identifier} has failed.')
+
+        finally:
+            stream.close()
+
     def send_stream_request(self, identifier, fsource, name='file', size=None, stream_type=None):
         """
         Send a file to Cisco Webex Teams
 
-        :param identifer: PersonId or roomId
-        :param fsource: abosulte path to local file
-        :param name: filename
-        :param stream_type: MIME file type
+        :param user: is the identifier of the person you want to send it to.
+        :param fsource: is a file object you want to send.
+        :param name: is an optional filename for it.
+        :param size: not supported in Webex Teams backend
+        :param stream_type: not supported in Webex Teams backend
         """
-        # Let's make sure the file exists
-        if not os.path.isfile(fsource.name):
-            log.error("File {} does not exist.".format(fsource.name))
-
-        # Not a requirement but to be completely clear let's make sure we are using
-        # an absolute path.
-        abs_path = os.path.abspath(fsource.name)
-
-        # The files parameter expects to receive a list containing a single string with
-        # the path to the file to be uploaded.
-        file_list = [abs_path]
-        if type(identifier) == CiscoWebexTeamsPerson:
-            self.webex_teams_api.messages.create(toPersonId=identifier.id, files=file_list)
-        else:
-            self.webex_teams_api.messages.create(roomId=identifier.room.id, files=file_list)
-        log.info("File {} was sent.".format(fsource.name))
-        # Not implemented: return stream objects
-        return None
+        log.debug(f'Requesting upload of {fsource.name} to {identifier}.')
+        stream = Stream(identifier, fsource, name, size, stream_type)
+        self.thread_pool.apply_async(self._teams_upload, (stream,))
+        return stream
 
     def build_reply(self, mess, text=None, private=False, threaded=False):
         """
