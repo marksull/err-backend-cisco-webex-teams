@@ -596,6 +596,8 @@ class CiscoWebexTeamsBackend(ErrBot):
                                }
                         await ws.send(json.dumps(msg))
 
+                        self.reset_reconnection_count()
+
                         while True:
                             message = await ws.recv()
                             logging.debug("WebSocket Received Message(raw): %s\n" % message)
