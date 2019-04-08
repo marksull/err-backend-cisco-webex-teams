@@ -16,7 +16,7 @@ from errbot import rendering
 
 import webexteamssdk
 
-__version__="1.2.0"
+__version__="1.3.0"
 
 log = logging.getLogger('errbot.backends.CiscoWebexTeams')
 
@@ -595,6 +595,8 @@ class CiscoWebexTeamsBackend(ErrBot):
                                }
                                }
                         await ws.send(json.dumps(msg))
+
+                        self.reset_reconnection_count()
 
                         while True:
                             message = await ws.recv()
