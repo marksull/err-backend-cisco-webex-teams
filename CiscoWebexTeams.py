@@ -443,13 +443,17 @@ class CiscoWebexTeamsBackend(ErrBot):
         person = CiscoWebexTeamsPerson(self)
         person.id = message.id
         person.email = message.personEmail
+        try:
+            parentId = message.parentId
+        except AttributeError:
+            parentId = message.id
 
         room = CiscoWebexTeamsRoom(backend=self, room_id=message.roomId)
         occupant = CiscoWebexTeamsRoomOccupant(self, person=person, room=room)
         msg = CiscoWebexTeamsMessage(body=message.markdown or message.text,
                                      frm=occupant,
                                      to=room,
-                                     extras={'roomType': message.roomType})
+                                     extras={'roomType': message.roomType,'parentId': parentId})
         return msg
 
     def follow_room(self, room):
@@ -526,7 +530,10 @@ class CiscoWebexTeamsBackend(ErrBot):
         if type(mess.to) == CiscoWebexTeamsPerson:
             self.webex_teams_api.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md)
         else:
-            self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md)
+            if mess.parent is not None:
+                self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md, parentId=mess.parent.extras['parentId'])
+            else:
+                self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md)
 
     def _teams_upload(self, stream):
         """
