@@ -517,6 +517,31 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         return room
 
+    def send_card(self, card):
+        """Send a card out to Webex Teams."""
+
+        # Need to strip out "markdown extra" as not supported by Webex Teams
+        md = markdown(self.md.convert(card.body),
+                      extensions=['markdown.extensions.nl2br',
+                                  'markdown.extensions.fenced_code'])
+
+        payload = {
+            "text": card.body,
+            "markdown": md,
+        }
+        if hasattr(card.parent, "extras"):
+            payload["parentId"] = card.parent.extras['parentId']
+
+        if hasattr(card, "layout"):
+            payload["attachments"] = [card.layout]
+
+        if type(card.to) == CiscoWebexTeamsPerson:
+            payload["toPersonId"] = card.to.id
+        else:
+            payload["roomId"] = card.to.room.id
+
+        self.webex_teams_api.messages.create(**payload)
+
     def send_message(self, mess):
         """
         Send a message to Cisco Webex Teams
