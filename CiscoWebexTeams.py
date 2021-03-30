@@ -92,16 +92,16 @@ class CiscoWebexTeamsPerson(Person):
 
     @property
     def email(self):
-      if type(self.emails) is list:
-        if len(self.emails):
-          # Note sure why a person can have multiple email addresses
-          return self.emails[0]
+        if type(self.emails) is list:
+            if len(self.emails):
+                # Note sure why a person can have multiple email addresses
+                return self.emails[0]
 
-      return None
+        return None
 
     @email.setter
     def email(self, val):
-      self.emails = [val]
+        self.emails = [val]
 
     @property
     def aclattr(self):
@@ -408,7 +408,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         return 'CiscoWebexTeams'
 
     def is_from_self(self, message):
-      return message.frm.id == message.to.id
+        return message.frm.id == message.to.id
 
     def process_websocket(self, message):
         """
