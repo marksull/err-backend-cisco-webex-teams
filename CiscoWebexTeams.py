@@ -422,19 +422,27 @@ class CiscoWebexTeamsBackend(ErrBot):
             return
 
         activity = message['data']['activity']
+        spark_message = None
 
-        if activity['verb'] != 'post':
-            logging.debug('Ignoring message where the verb is not type "post"')
+        if activity['verb'] == "post":
+            spark_message = self.webex_teams_api.messages.get(activity['id'])
+
+            if spark_message.personEmail in self.bot_identifier.emails:
+                logging.debug('Ignoring message from myself')
+                return
+
+            logging.info('Message from %s: %s\n' % (spark_message.personEmail, spark_message.text))
+            self.callback_message(self.get_message(spark_message))
             return
 
-        spark_message = self.webex_teams_api.messages.get(activity['id'])
-
-        if spark_message.personEmail in self.bot_identifier.emails:
-            logging.debug('Ignoring message from myself')
+        if activity['verb'] == "cardAction":
+            spark_message = self.webex_teams_api.attachment_actions.get(activity['id'])
+            self.callback_card(spark_message)
             return
 
-        logging.info('Message from %s: %s\n' % (spark_message.personEmail, spark_message.text))
-        self.callback_message(self.get_message(spark_message))
+        if not spark_message:
+            logging.debug(f'Ignoring message where the verb is not type "post" or "cardAction". Verb is {activity["verb"]}')
+
     def callback_card(self, msg):
         """
         Process a card callback.
