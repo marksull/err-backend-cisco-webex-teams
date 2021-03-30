@@ -60,6 +60,28 @@ class CiscoWebexTeamsMessage(Message):
         return not self.is_direct
 
 
+class CiscoWebexTeamsMessageWithCard(CiscoWebexTeamsMessage):
+    """
+    A Cisco Webex Teams Message That Contains A Card
+    """
+    def __init__(self, card):
+        """
+        :param card: dict containing the adaptivecard.io structure
+        """
+        super(CiscoWebexTeamsMessageWithCard, self).__init__()
+        self.card = card
+
+    @property
+    def card(self) -> dict:
+        return self._card
+
+    @card.setter
+    def card(self, value) -> None:
+        if not isinstance(dict, value):
+            raise ValueError("Card must be of type dict")
+        self._card = value
+
+
 class CiscoWebexTeamsPerson(Person):
     """
     A Cisco Webex Teams Person
@@ -532,7 +554,11 @@ class CiscoWebexTeamsBackend(ErrBot):
         return room
 
     def send_card(self, card):
-        """Send a card out to Webex Teams."""
+        """
+        Send a card out to Webex Teams.
+
+        :param card: CiscoWebexTeamsMessageWithCard
+        """
 
         # Need to strip out "markdown extra" as not supported by Webex Teams
         md = markdown(self.md.convert(card.body),
@@ -546,8 +572,11 @@ class CiscoWebexTeamsBackend(ErrBot):
         if hasattr(card.parent, "extras"):
             payload["parentId"] = card.parent.extras['parentId']
 
+        # backward compatibility for now
         if hasattr(card, "layout"):
             payload["attachments"] = [card.layout]
+        else:
+            payload["attachments"] = [card.card]
 
         if type(card.to) == CiscoWebexTeamsPerson:
             payload["toPersonId"] = card.to.id
@@ -561,6 +590,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         Send a message to Cisco Webex Teams
 
         :param mess: A CiscoWebexTeamsMessage
+
         """
         # Need to strip out "markdown extra" as not supported by Webex Teams
         md = markdown(self.md.convert(mess.body),
