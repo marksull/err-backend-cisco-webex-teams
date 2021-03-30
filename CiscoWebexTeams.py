@@ -435,6 +435,12 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         logging.info('Message from %s: %s\n' % (spark_message.personEmail, spark_message.text))
         self.callback_message(self.get_message(spark_message))
+    def callback_card(self, msg):
+        """
+        Process a card callback.
+        :param msg:
+        """
+        self._dispatch_to_plugins("callback_card", msg)
 
     def get_message(self, message):
         """
