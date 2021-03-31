@@ -15,6 +15,7 @@ from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE, R
 from errbot import rendering
 
 import webexteamssdk
+from webexteamssdk.models.cards import AdaptiveCard
 
 __version__ = "1.6.0"
 
@@ -553,13 +554,29 @@ class CiscoWebexTeamsBackend(ErrBot):
         md = markdown(self.md.convert(mess.body),
                       extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
 
+        # card backward compatibility for now based on previous contribution
+        if hasattr(mess, "layout"):
+            mess.card = mess.layout
+
+        if not isinstance(mess.card, list) and mess.card is not None:
+            mess.card = [mess.card]
+
+        # webebteamssdk currently has a bug that to results in cards not being included as attachments
+        # https://github.com/CiscoDevNet/webexteamssdk/pull/141
+        # TODO: This section can be removed once the above pull request is merged
+        for item, attachment in enumerate(mess.card):
+            if isinstance(attachment, AdaptiveCard):
+                mess.card[item] = webexteamssdk.utils.make_attachment(attachment)
+        # End of workaround
+
         if type(mess.to) == CiscoWebexTeamsPerson:
-            self.webex_teams_api.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md)
+            self.webex_teams_api.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md, attachments=mess.card)
+            return
+
+        if mess.parent is not None:
+            self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md, parentId=mess.parent.extras['parentId'], attachments=mess.card)
         else:
-            if mess.parent is not None:
-                self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md, parentId=mess.parent.extras['parentId'])
-            else:
-                self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md)
+            self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md, attachments=mess.card)
 
     def _teams_upload(self, stream):
         """
