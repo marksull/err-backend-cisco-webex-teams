@@ -51,6 +51,11 @@ class CiscoWebexTeamsMessage(Message):
     """
     A Cisco Webex Teams Message
     """
+
+    def __init__(self, *args, **kwargs):
+        super(CiscoWebexTeamsMessage, self).__init__(*args, **kwargs)
+        self.card = None
+
     @property
     def is_direct(self) -> bool:
         return self.extras['roomType'] == 'direct'
@@ -58,28 +63,6 @@ class CiscoWebexTeamsMessage(Message):
     @property
     def is_group(self) -> bool:
         return not self.is_direct
-
-
-class CiscoWebexTeamsMessageWithCard(CiscoWebexTeamsMessage):
-    """
-    A Cisco Webex Teams Message That Contains A Card
-    """
-    def __init__(self, card):
-        """
-        :param card: dict containing the adaptivecard.io structure
-        """
-        super(CiscoWebexTeamsMessageWithCard, self).__init__()
-        self.card = card
-
-    @property
-    def card(self) -> dict:
-        return self._card
-
-    @card.setter
-    def card(self, value) -> None:
-        if not isinstance(dict, value):
-            raise ValueError("Card must be of type dict")
-        self._card = value
 
 
 class CiscoWebexTeamsPerson(Person):
