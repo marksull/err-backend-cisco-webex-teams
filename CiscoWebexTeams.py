@@ -483,7 +483,6 @@ class CiscoWebexTeamsBackend(ErrBot):
         :return:
         """
         log.debug("Backend: Follow Room yet to be implemented")  # TODO
-        pass
 
     def rooms(self):
         """
@@ -501,7 +500,6 @@ class CiscoWebexTeamsBackend(ErrBot):
         :return:
         """
         log.debug("Backend: Contacts yet to be implemented")  # TODO
-        pass
 
     def build_identifier(self, strrep):
         """
