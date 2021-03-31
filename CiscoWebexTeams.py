@@ -541,18 +541,8 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         :param mess: A CiscoWebexTeamsMessage
         """
-        self.send_message(mess)
-
-    def send_message(self, mess):
-        """
-        Send a message to Cisco Webex Teams
-
-        :param mess: A CiscoWebexTeamsMessage
-
-        """
-        # Need to strip out "markdown extra" as not supported by Webex Teams
-        md = markdown(self.md.convert(mess.body),
-                      extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
+        if not hasattr(mess, "card"):
+            mess.card = []
 
         # card backward compatibility for now based on previous contribution
         if hasattr(mess, "layout"):
@@ -568,6 +558,22 @@ class CiscoWebexTeamsBackend(ErrBot):
             if isinstance(attachment, AdaptiveCard):
                 mess.card[item] = webexteamssdk.utils.make_attachment(attachment)
         # End of workaround
+
+        self.send_message(mess)
+
+    def send_message(self, mess):
+        """
+        Send a message to Cisco Webex Teams
+
+        :param mess: A CiscoWebexTeamsMessage
+
+        """
+        # Need to strip out "markdown extra" as not supported by Webex Teams
+        md = markdown(self.md.convert(mess.body),
+                      extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
+
+        if not hasattr(mess, "card"):
+            mess.card = []
 
         if type(mess.to) == CiscoWebexTeamsPerson:
             self.webex_teams_api.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md, attachments=mess.card)
