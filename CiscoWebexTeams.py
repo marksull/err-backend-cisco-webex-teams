@@ -152,7 +152,7 @@ class CiscoWebexTeamsPerson(Person):
         Return a Cisco Webex Teams person when searching using an ID
         """
         try:
-            self._backend.webex_teams_api.people.get(self.id)
+            self.teams_person = self._backend.webex_teams_api.people.get(self.id)
         except:
           raise FailedToFindWebexTeamsPerson(f'Could not find the user using the id {self.id}')
 
