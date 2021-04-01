@@ -276,6 +276,10 @@ class CiscoWebexTeamsRoom(Room):
     def title(self):
         return self._room_title
 
+    @property
+    def type(self):
+        return self._room.type
+
     # Errbot API
 
     def join(self, username=None, password=None):
