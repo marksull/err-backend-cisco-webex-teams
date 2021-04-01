@@ -470,8 +470,29 @@ class CiscoWebexTeamsBackend(ErrBot):
                     getattr(plugin, "callback_card")(message)
             except Exception:
                 log.exception(f"callback_card on {plugin_name} crashed.")
+
+    def get_card_message(self, message):
         """
-        self._dispatch_to_plugins("callback_card", msg)
+        Create an errbot message object with attached card
+        :param message: Message to be processed
+        :return:
+        """
+
+        card_person = CiscoWebexTeamsPerson(self)
+        card_person.id = message.personId
+        card_person.get_using_id()
+
+        card_room = CiscoWebexTeamsRoom(backend=self, room_id=message.roomId)
+
+        card_occupant = CiscoWebexTeamsRoomOccupant(self, person=card_person, room=card_room)
+
+        card_msg = CiscoWebexTeamsMessage(body="",
+                                          frm=card_occupant,
+                                          to=card_room,
+                                          extras={'roomType': card_room.type, 'parentId': card_person.id})
+        card_msg.card_action = message
+
+        return card_msg
 
     def get_message(self, message):
         """
