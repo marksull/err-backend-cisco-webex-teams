@@ -11,7 +11,15 @@ import os
 from markdown import markdown
 
 from errbot.core import ErrBot
-from errbot.backends.base import Message, Person, Room, RoomOccupant, OFFLINE, RoomDoesNotExistError, Stream
+from errbot.backends.base import (
+    Message,
+    Person,
+    Room,
+    RoomOccupant,
+    OFFLINE,
+    RoomDoesNotExistError,
+    Stream,
+)
 from errbot import rendering
 
 import webexteamssdk
@@ -19,20 +27,20 @@ from webexteamssdk.models.cards import AdaptiveCard
 
 __version__ = "1.6.0"
 
-log = logging.getLogger('errbot.backends.CiscoWebexTeams')
+log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
 CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT = 7439
 
-DEVICES_URL = 'https://wdm-a.wbx2.com/wdm/api/v1/devices'
+DEVICES_URL = "https://wdm-a.wbx2.com/wdm/api/v1/devices"
 
 DEVICE_DATA = {
-    "deviceName"    : "pywebsocket-client",
-    "deviceType"    : "DESKTOP",
+    "deviceName": "pywebsocket-client",
+    "deviceType": "DESKTOP",
     "localizedModel": "python",
-    "model"         : "python",
-    "name"          : f"python-webex-teams-client-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}",
-    "systemName"    : "python-webex-teams-client",
-    "systemVersion" : "0.1"
+    "model": "python",
+    "name": f"python-webex-teams-client-{''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))}",
+    "systemName": "python-webex-teams-client",
+    "systemVersion": "0.1",
 }
 
 
@@ -60,7 +68,7 @@ class CiscoWebexTeamsMessage(Message):
 
     @property
     def is_direct(self) -> bool:
-        return self.extras['roomType'] == 'direct'
+        return self.extras["roomType"] == "direct"
 
     @property
     def is_group(self) -> bool:
@@ -71,6 +79,7 @@ class CiscoWebexTeamsPerson(Person):
     """
     A Cisco Webex Teams Person
     """
+
     def __init__(self, backend, attributes=None):
 
         self._backend = backend
@@ -87,7 +96,7 @@ class CiscoWebexTeamsPerson(Person):
 
     @id.setter
     def id(self, val):
-        self.teams_person._json_data['id'] = val
+        self.teams_person._json_data["id"] = val
 
     @property
     def emails(self):
@@ -95,7 +104,7 @@ class CiscoWebexTeamsPerson(Person):
 
     @emails.setter
     def emails(self, val):
-        self.teams_person._json_data['emails'] = val
+        self.teams_person._json_data["emails"] = val
 
     @property
     def email(self):
@@ -135,18 +144,24 @@ class CiscoWebexTeamsPerson(Person):
                 self.teams_person = person
                 return
         except:
-            raise FailedToFindWebexTeamsPerson(f'Could not find a user using the email address {self.email}')
+            raise FailedToFindWebexTeamsPerson(
+                f"Could not find a user using the email address {self.email}"
+            )
 
     def find_using_name(self):
         """
         Return the FIRST Cisco Webex Teams person found when searching using the display name
         """
         try:
-            for person in self._backend.webex_teams_api.people.list(displayName=self.displayName):
+            for person in self._backend.webex_teams_api.people.list(
+                displayName=self.displayName
+            ):
                 self.teams_person = person
                 return
         except:
-            raise FailedToFindWebexTeamsPerson(f'Could not find the user using the displayName {self.displayName}')
+            raise FailedToFindWebexTeamsPerson(
+                f"Could not find the user using the displayName {self.displayName}"
+            )
 
     def get_using_id(self):
         """
@@ -155,7 +170,9 @@ class CiscoWebexTeamsPerson(Person):
         try:
             self.teams_person = self._backend.webex_teams_api.people.get(self.id)
         except:
-          raise FailedToFindWebexTeamsPerson(f'Could not find the user using the id {self.id}')
+            raise FailedToFindWebexTeamsPerson(
+                f"Could not find the user using the id {self.id}"
+            )
 
     # Required by the Err API
 
@@ -165,11 +182,11 @@ class CiscoWebexTeamsPerson(Person):
 
     @property
     def client(self):
-        return ''
+        return ""
 
     @property
     def nick(self):
-        return ''
+        return ""
 
     @property
     def fullname(self):
@@ -191,6 +208,7 @@ class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
     """
     A Cisco Webex Teams Person that Occupies a Cisco Webex Teams Room
     """
+
     def __init__(self, backend, room=None, person=None):
 
         room = room or {}
@@ -204,7 +222,9 @@ class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
         if isinstance(person, CiscoWebexTeamsPerson):
             self.teams_person = person
         else:
-            self.teams_person = CiscoWebexTeamsPerson(backend=backend, attributes=person)
+            self.teams_person = CiscoWebexTeamsPerson(
+                backend=backend, attributes=person
+            )
 
     @property
     def room(self):
@@ -215,6 +235,7 @@ class CiscoWebexTeamsRoom(Room):
     """
     A Cisco Webex Teams Room
     """
+
     def __init__(self, backend, room_id=None, room_title=None):
 
         self._backend = backend
@@ -284,18 +305,26 @@ class CiscoWebexTeamsRoom(Room):
 
     def join(self, username=None, password=None):
 
-        log.debug(f'Joining room {self.title} ({self.id})')
+        log.debug(f"Joining room {self.title} ({self.id})")
         try:
-            self._backend.webex_teams_api.memberships.create(self.id, self._backend.bot_identifier.id)
-            log.debug(f'{self._backend.bot_identifier.displayName} is NOW a member of {self.title} ({self.id}')
+            self._backend.webex_teams_api.memberships.create(
+                self.id, self._backend.bot_identifier.id
+            )
+            log.debug(
+                f"{self._backend.bot_identifier.displayName} is NOW a member of {self.title} ({self.id}"
+            )
 
         except webexteamssdk.exceptions.ApiError as error:
             # API now returning a 403 when trying to add user to a direct conversation and they are already in the
             # conversation. For groups if the user is already a member a 409 is returned.
             if error.response.status_code == 403 or error.response.status_code == 409:
-                log.debug(f'{self._backend.bot_identifier.displayName} is already a member of {self.title} ({self.id})')
+                log.debug(
+                    f"{self._backend.bot_identifier.displayName} is already a member of {self.title} ({self.id})"
+                )
             else:
-                log.exception(f'HTTP Exception: Failed to join room {self.title} ({self.id})')
+                log.exception(
+                    f"HTTP Exception: Failed to join room {self.title} ({self.id})"
+                )
                 return
 
         except Exception:
@@ -312,8 +341,10 @@ class CiscoWebexTeamsRoom(Room):
         """
         self._room = self._backend.webex_teams_api.rooms.create(self.title)
         self._room_id = self._room.id
-        self._backend.webex_teams_api.messages.create(roomId=self._room_id, text="Welcome to the room!")
-        log.debug(f'Created room: {self.title}')
+        self._backend.webex_teams_api.messages.create(
+            roomId=self._room_id, text="Welcome to the room!"
+        )
+        log.debug(f"Created room: {self.title}")
 
     def destroy(self):
         """
@@ -323,7 +354,7 @@ class CiscoWebexTeamsRoom(Room):
         self._backend.webex_teams_api.rooms.delete(self.id)
         # We want to re-init this room so that is accurately reflects that is no longer exists
         self.load_room_from_title()
-        log.debug(f'Deleted room: {self.title}')
+        log.debug(f"Deleted room: {self.title}")
 
     @property
     def exists(self):
@@ -347,7 +378,9 @@ class CiscoWebexTeamsRoom(Room):
     def occupants(self):
 
         if not self.exists:
-            raise RoomDoesNotExistError(f"Room {self.title or self.id} does not exist, or the bot does not have access")
+            raise RoomDoesNotExistError(
+                f"Room {self.title or self.id} does not exist, or the bot does not have access"
+            )
 
         occupants = []
 
@@ -355,9 +388,15 @@ class CiscoWebexTeamsRoom(Room):
             p = CiscoWebexTeamsPerson(backend=self._backend)
             p.id = person.personId
             p.email = person.personEmail
-            occupants.append(CiscoWebexTeamsRoomOccupant(backend=self._backend, room=self, person=p))
+            occupants.append(
+                CiscoWebexTeamsRoomOccupant(backend=self._backend, room=self, person=p)
+            )
 
-        log.debug("Total occupants for room {} ({}) is {} ".format(self.title, self.id, len(occupants)))
+        log.debug(
+            "Total occupants for room {} ({}) is {} ".format(
+                self.title, self.id, len(occupants)
+            )
+        )
 
         return occupants
 
@@ -388,16 +427,19 @@ class CiscoWebexTeamsBackend(ErrBot):
         self.md = rendering.md()
 
         # Do we have the basic mandatory config needed to operate the bot
-        self._bot_token = bot_identity.get('TOKEN', None)
+        self._bot_token = bot_identity.get("TOKEN", None)
         if not self._bot_token:
-            log.fatal('You need to define the Cisco Webex Teams Bot TOKEN in the BOT_IDENTITY of config.py.')
+            log.fatal(
+                "You need to define the Cisco Webex Teams Bot TOKEN in the BOT_IDENTITY of config.py."
+            )
             sys.exit(1)
 
         # Adjust message size limit to cater for the non-standard size limit
         if config.MESSAGE_SIZE_LIMIT > CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT:
             log.info(
-                "Capping MESSAGE_SIZE_LIMIT to {} which is the maximum length allowed by CiscoWebexTeams".
-                    format(CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT)
+                "Capping MESSAGE_SIZE_LIMIT to {} which is the maximum length allowed by CiscoWebexTeams".format(
+                    CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
+                )
             )
             config.MESSAGE_SIZE_LIMIT = CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
 
@@ -408,7 +450,9 @@ class CiscoWebexTeamsBackend(ErrBot):
         self.device_info = self._get_device_info()
 
         log.debug("Fetching and building identifier for the bot itself.")
-        self.bot_identifier = CiscoWebexTeamsPerson(self, self.webex_teams_api.people.me())
+        self.bot_identifier = CiscoWebexTeamsPerson(
+            self, self.webex_teams_api.people.me()
+        )
 
         log.debug("Done! I'm connected as {}".format(self.bot_identifier.email))
 
@@ -416,7 +460,7 @@ class CiscoWebexTeamsBackend(ErrBot):
 
     @property
     def mode(self):
-        return 'CiscoWebexTeams'
+        return "CiscoWebexTeams"
 
     def is_from_self(self, message):
         return message.frm.id == message.to.id
@@ -427,32 +471,38 @@ class CiscoWebexTeamsBackend(ErrBot):
         :param message: The message received from the websocket
         :return:
         """
-        message = json.loads(message.decode('utf-8'))
-        if message['data']['eventType'] != 'conversation.activity':
-            logging.debug('Ignoring message where Event Type is not conversation.activity')
+        message = json.loads(message.decode("utf-8"))
+        if message["data"]["eventType"] != "conversation.activity":
+            logging.debug(
+                "Ignoring message where Event Type is not conversation.activity"
+            )
             return
 
-        activity = message['data']['activity']
+        activity = message["data"]["activity"]
         new_message = None
 
-        if activity['verb'] == "post":
-            new_message = self.webex_teams_api.messages.get(activity['id'])
+        if activity["verb"] == "post":
+            new_message = self.webex_teams_api.messages.get(activity["id"])
 
             if new_message.personEmail in self.bot_identifier.emails:
-                logging.debug('Ignoring message from myself')
+                logging.debug("Ignoring message from myself")
                 return
 
-            logging.info(f'Message from {new_message.personEmail}: {new_message.text}\n')
+            logging.info(
+                f"Message from {new_message.personEmail}: {new_message.text}\n"
+            )
             self.callback_message(self.get_message(new_message))
             return
 
-        if activity['verb'] == "cardAction":
-            new_message = self.webex_teams_api.attachment_actions.get(activity['id'])
+        if activity["verb"] == "cardAction":
+            new_message = self.webex_teams_api.attachment_actions.get(activity["id"])
             self.callback_card(self.get_card_message(new_message))
             return
 
         if not new_message:
-            logging.debug(f'Ignoring message where the verb is not type "post" or "cardAction". Verb is {activity["verb"]}')
+            logging.debug(
+                f'Ignoring message where the verb is not type "post" or "cardAction". Verb is {activity["verb"]}'
+            )
 
     def callback_card(self, message):
         """
@@ -461,7 +511,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         for plugin in self.plugin_manager.get_all_active_plugins():
             plugin_name = plugin.name
-            log.debug(f"Triggering callback_card on {plugin_name}.", )
+            log.debug(f"Triggering callback_card on {plugin_name}.",)
             # noinspection PyBroadException
             try:
                 # As this is a custom callback specific to this backend, there is no
@@ -484,12 +534,16 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         card_room = CiscoWebexTeamsRoom(backend=self, room_id=message.roomId)
 
-        card_occupant = CiscoWebexTeamsRoomOccupant(self, person=card_person, room=card_room)
+        card_occupant = CiscoWebexTeamsRoomOccupant(
+            self, person=card_person, room=card_room
+        )
 
-        card_msg = CiscoWebexTeamsMessage(body="",
-                                          frm=card_occupant,
-                                          to=card_room,
-                                          extras={'roomType': card_room.type, 'parentId': card_person.id})
+        card_msg = CiscoWebexTeamsMessage(
+            body="",
+            frm=card_occupant,
+            to=card_room,
+            extras={"roomType": card_room.type, "parentId": card_person.id},
+        )
         card_msg.card_action = message
 
         return card_msg
@@ -516,10 +570,12 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         room = CiscoWebexTeamsRoom(backend=self, room_id=message.roomId)
         occupant = CiscoWebexTeamsRoomOccupant(self, person=person, room=room)
-        msg = CiscoWebexTeamsMessage(body=message.markdown or message.text,
-                                     frm=occupant,
-                                     to=room,
-                                     extras={'roomType': message.roomType,'parentId': parent_id})
+        msg = CiscoWebexTeamsMessage(
+            body=message.markdown or message.text,
+            frm=occupant,
+            to=room,
+            extras={"roomType": message.roomType, "parentId": parent_id},
+        )
         return msg
 
     def follow_room(self, room):
@@ -538,7 +594,9 @@ class CiscoWebexTeamsBackend(ErrBot):
         :return:
             List of rooms
         """
-        return [f"{room.title} ({room.type})" for room in self.webex_teams_api.rooms.list()]
+        return [
+            f"{room.title} ({room.type})" for room in self.webex_teams_api.rooms.list()
+        ]
 
     def contacts(self):
         """
@@ -618,20 +676,41 @@ class CiscoWebexTeamsBackend(ErrBot):
         md = None
         if mess.body:
             # Need to strip out "markdown extra" as not supported by Webex Teams
-            md = markdown(self.md.convert(mess.body),
-                          extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
+            md = markdown(
+                self.md.convert(mess.body),
+                extensions=[
+                    "markdown.extensions.nl2br",
+                    "markdown.extensions.fenced_code",
+                ],
+            )
 
         if not hasattr(mess, "card"):
             mess.card = []
 
         if type(mess.to) == CiscoWebexTeamsPerson:
-            self.webex_teams_api.messages.create(toPersonId=mess.to.id, text=mess.body, markdown=md, attachments=mess.card)
+            self.webex_teams_api.messages.create(
+                toPersonId=mess.to.id,
+                text=mess.body,
+                markdown=md,
+                attachments=mess.card,
+            )
             return
 
         if mess.parent is not None:
-            self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md, parentId=mess.parent.extras['parentId'], attachments=mess.card)
+            self.webex_teams_api.messages.create(
+                roomId=mess.to.room.id,
+                text=mess.body,
+                markdown=md,
+                parentId=mess.parent.extras["parentId"],
+                attachments=mess.card,
+            )
         else:
-            self.webex_teams_api.messages.create(roomId=mess.to.room.id, text=mess.body, markdown=md, attachments=mess.card)
+            self.webex_teams_api.messages.create(
+                roomId=mess.to.room.id,
+                text=mess.body,
+                markdown=md,
+                attachments=mess.card,
+            )
 
     def _teams_upload(self, stream):
         """
@@ -642,24 +721,36 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         try:
             stream.accept()
-            log.exception(f'Upload of {stream.raw.name} to {stream.identifier} has started.')
+            log.exception(
+                f"Upload of {stream.raw.name} to {stream.identifier} has started."
+            )
 
             if type(stream.identifier) == CiscoWebexTeamsPerson:
-                self.webex_teams_api.messages.create(toPersonId=stream.identifier.id, files=[stream.raw.name])
+                self.webex_teams_api.messages.create(
+                    toPersonId=stream.identifier.id, files=[stream.raw.name]
+                )
             else:
-                self.webex_teams_api.messages.create(roomId=stream.identifier.room.id, files=[stream.raw.name])
+                self.webex_teams_api.messages.create(
+                    roomId=stream.identifier.room.id, files=[stream.raw.name]
+                )
 
             stream.success()
-            log.exception(f'Upload of {stream.raw.name} to {stream.identifier} has completed.')
+            log.exception(
+                f"Upload of {stream.raw.name} to {stream.identifier} has completed."
+            )
 
         except Exception:
             stream.error()
-            log.exception(f'Upload of {stream.raw.name} to {stream.identifier} has failed.')
+            log.exception(
+                f"Upload of {stream.raw.name} to {stream.identifier} has failed."
+            )
 
         finally:
             stream.close()
 
-    def send_stream_request(self, identifier, fsource, name='file', size=None, stream_type=None):
+    def send_stream_request(
+        self, identifier, fsource, name="file", size=None, stream_type=None
+    ):
         """
         Send a file to Cisco Webex Teams
 
@@ -669,7 +760,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         :param size: not supported in Webex Teams backend
         :param stream_type: not supported in Webex Teams backend
         """
-        log.debug(f'Requesting upload of {fsource.name} to {identifier}.')
+        log.debug(f"Requesting upload of {fsource.name} to {identifier}.")
         stream = Stream(identifier, fsource, name, size, stream_type)
         self.thread_pool.apply_async(self._teams_upload, (stream,))
         return stream
@@ -702,28 +793,39 @@ class CiscoWebexTeamsBackend(ErrBot):
         self.connect_callback()
         try:
             while True:
+
                 async def _run():
-                    logging.debug("Opening websocket connection to %s" % self.device_info['webSocketUrl'])
-                    async with websockets.connect(self.device_info['webSocketUrl']) as ws:
+                    logging.debug(
+                        "Opening websocket connection to %s"
+                        % self.device_info["webSocketUrl"]
+                    )
+                    async with websockets.connect(
+                        self.device_info["webSocketUrl"]
+                    ) as ws:
                         logging.info("WebSocket Opened\n")
-                        msg = {'id'  : str(uuid.uuid4()),
-                               'type': 'authorization',
-                               'data': {
-                                   'token': 'Bearer ' + self._bot_token
-                               }
-                               }
+                        msg = {
+                            "id": str(uuid.uuid4()),
+                            "type": "authorization",
+                            "data": {"token": "Bearer " + self._bot_token},
+                        }
                         await ws.send(json.dumps(msg))
 
                         self.reset_reconnection_count()
 
                         while True:
                             message = await ws.recv()
-                            logging.debug("WebSocket Received Message(raw): %s\n" % message)
+                            logging.debug(
+                                "WebSocket Received Message(raw): %s\n" % message
+                            )
                             try:
                                 loop = asyncio.get_event_loop()
-                                loop.run_in_executor(None, self.process_websocket, message)
+                                loop.run_in_executor(
+                                    None, self.process_websocket, message
+                                )
                             except:
-                                logging.warning('An exception occurred while processing message. Ignoring. ')
+                                logging.warning(
+                                    "An exception occurred while processing message. Ignoring. "
+                                )
 
                 asyncio.get_event_loop().run_until_complete(_run())
         except KeyboardInterrupt:
@@ -737,27 +839,29 @@ class CiscoWebexTeamsBackend(ErrBot):
         Setup device in Webex Teams to bridge events across websocket
         :return:
         """
-        logging.debug('Getting device list from Webex Teams')
+        logging.debug("Getting device list from Webex Teams")
 
         try:
             resp = self.webex_teams_api._session.get(DEVICES_URL)
-            for device in resp['devices']:
-                if device['name'] == DEVICE_DATA['name']:
+            for device in resp["devices"]:
+                if device["name"] == DEVICE_DATA["name"]:
                     self.device_info = device
                     return device
         except webexteamssdk.ApiError:
             pass
 
-        logging.info('Device does not exist in Webex Teams, creating')
+        logging.info("Device does not exist in Webex Teams, creating")
 
         resp = self.webex_teams_api._session.post(DEVICES_URL, json=DEVICE_DATA)
         if resp is None:
-            raise FailedToCreateWebexDevice("Could not create Webex Teams device using {}".format(DEVICES_URL))
+            raise FailedToCreateWebexDevice(
+                "Could not create Webex Teams device using {}".format(DEVICES_URL)
+            )
 
         self.device_info = resp
         return resp
 
-    def change_presence(self, status=OFFLINE, message=''):
+    def change_presence(self, status=OFFLINE, message=""):
         """
         Backend: Change presence yet to be implemented
 
@@ -838,5 +942,13 @@ class CiscoWebexTeamsBackend(ErrBot):
         Register identifiers pickling.
         """
         CiscoWebexTeamsBackend.__build_identifier = self.build_identifier
-        for cls in (CiscoWebexTeamsPerson, CiscoWebexTeamsRoomOccupant, CiscoWebexTeamsRoom):
-            copyreg.pickle(cls, CiscoWebexTeamsBackend._pickle_identifier, CiscoWebexTeamsBackend._unpickle_identifier)
+        for cls in (
+            CiscoWebexTeamsPerson,
+            CiscoWebexTeamsRoomOccupant,
+            CiscoWebexTeamsRoom,
+        ):
+            copyreg.pickle(
+                cls,
+                CiscoWebexTeamsBackend._pickle_identifier,
+                CiscoWebexTeamsBackend._unpickle_identifier,
+            )
