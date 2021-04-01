@@ -614,9 +614,12 @@ class CiscoWebexTeamsBackend(ErrBot):
         :param mess: A CiscoWebexTeamsMessage
 
         """
-        # Need to strip out "markdown extra" as not supported by Webex Teams
-        md = markdown(self.md.convert(mess.body),
-                      extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
+
+        md = None
+        if mess.body:
+            # Need to strip out "markdown extra" as not supported by Webex Teams
+            md = markdown(self.md.convert(mess.body),
+                          extensions=['markdown.extensions.nl2br', 'markdown.extensions.fenced_code'])
 
         if not hasattr(mess, "card"):
             mess.card = []
