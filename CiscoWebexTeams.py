@@ -497,21 +497,29 @@ class CiscoWebexTeamsBackend(ErrBot):
     def get_message(self, message):
         """
         Create an errbot message object
+        :param message: The message to be processed
+        :return:
         """
+
         person = CiscoWebexTeamsPerson(self)
         person.id = message.id
-        person.email = message.personEmail
+
         try:
-            parentId = message.parentId
+            person.email = message.personEmail
         except AttributeError:
-            parentId = message.id
+            person.get_using_id()
+
+        try:
+            parent_id = message.parentId
+        except AttributeError:
+            parent_id = message.id
 
         room = CiscoWebexTeamsRoom(backend=self, room_id=message.roomId)
         occupant = CiscoWebexTeamsRoomOccupant(self, person=person, room=room)
         msg = CiscoWebexTeamsMessage(body=message.markdown or message.text,
                                      frm=occupant,
                                      to=room,
-                                     extras={'roomType': message.roomType,'parentId': parentId})
+                                     extras={'roomType': message.roomType,'parentId': parent_id})
         return msg
 
     def follow_room(self, room):
