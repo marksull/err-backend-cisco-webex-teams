@@ -454,10 +454,22 @@ class CiscoWebexTeamsBackend(ErrBot):
         if not spark_message:
             logging.debug(f'Ignoring message where the verb is not type "post" or "cardAction". Verb is {activity["verb"]}')
 
-    def callback_card(self, msg):
+    def callback_card(self, message):
         """
         Process a card callback.
-        :param msg:
+        :param message: Message to be processed
+        """
+        for plugin in self.plugin_manager.get_all_active_plugins():
+            plugin_name = plugin.name
+            log.debug(f"Triggering callback_card on {plugin_name}.", )
+            # noinspection PyBroadException
+            try:
+                # As this is a custom callback specific to this backend, there is no
+                # expectation that all plugins with have implemented this method
+                if hasattr(plugin, "callback_card"):
+                    getattr(plugin, "callback_card")(message)
+            except Exception:
+                log.exception(f"callback_card on {plugin_name} crashed.")
         """
         self._dispatch_to_plugins("callback_card", msg)
 
