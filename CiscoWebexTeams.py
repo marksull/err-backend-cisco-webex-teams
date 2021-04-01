@@ -433,25 +433,25 @@ class CiscoWebexTeamsBackend(ErrBot):
             return
 
         activity = message['data']['activity']
-        spark_message = None
+        new_message = None
 
         if activity['verb'] == "post":
-            spark_message = self.webex_teams_api.messages.get(activity['id'])
+            new_message = self.webex_teams_api.messages.get(activity['id'])
 
-            if spark_message.personEmail in self.bot_identifier.emails:
+            if new_message.personEmail in self.bot_identifier.emails:
                 logging.debug('Ignoring message from myself')
                 return
 
-            logging.info('Message from %s: %s\n' % (spark_message.personEmail, spark_message.text))
-            self.callback_message(self.get_message(spark_message))
+            logging.info(f'Message from {new_message.personEmail}: {new_message.text}\n')
+            self.callback_message(self.get_message(new_message))
             return
 
         if activity['verb'] == "cardAction":
-            spark_message = self.webex_teams_api.attachment_actions.get(activity['id'])
-            self.callback_card(spark_message)
+            new_message = self.webex_teams_api.attachment_actions.get(activity['id'])
+            self.callback_card(self.get_card_message(new_message))
             return
 
-        if not spark_message:
+        if not new_message:
             logging.debug(f'Ignoring message where the verb is not type "post" or "cardAction". Verb is {activity["verb"]}')
 
     def callback_card(self, message):
@@ -680,7 +680,7 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         :param mess: The original CiscoWebexTeamsMessage object that will be replied to
         :param text: The text that is to be sent in reply to the message
-        :param private: Boolean indiciating whether the message should be directed as a private message in lieu of
+        :param private: Boolean indicating whether the message should be directed as a private message in lieu of
                         sending it back to the room
         :return: CiscoWebexTeamsMessage
         """
