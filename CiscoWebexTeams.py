@@ -56,6 +56,7 @@ class CiscoWebexTeamsMessage(Message):
     def __init__(self, *args, **kwargs):
         super(CiscoWebexTeamsMessage, self).__init__(*args, **kwargs)
         self.card = None
+        self.card_action = None
 
     @property
     def is_direct(self) -> bool:
