@@ -58,6 +58,11 @@ to enable BOT_PREFIX_OPTIONAL_ON_CHAT so that the prefix is not required for dir
 BOT_PREFIX_OPTIONAL_ON_CHAT = True
 ```
 
+## Cards
+
+A custom card callback handler has now been implemented to make it easier to work with cards. Refer to the
+example plugin [err-example-card](examples/err-example-cards)
+
 ## Credit
 
 I unrestrainedly plagiarized from most of the already existing err backends and cgascoig's ciscospark-websocket implementation 
