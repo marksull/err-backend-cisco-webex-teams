@@ -31,11 +31,11 @@ class ExampleUpload(BotPlugin):
         Path(FILE_2).write_text(MY_TEXT + "File2")
 
         new_msg.body = MY_TEXT
-        new_msg.files = [FILE_1, FILE_1]
+        new_msg.files = [FILE_1, FILE_2]
 
-        # As this message contains a body and two files, each will be split into three messages:
+        # As this message contains a body and two files, each will be split into a separate messages:
         # First message will be the body
-        # Second message will be FILE_2
-        # Third message will be FILE_#
+        # Second message will be FILE_1
+        # Third message will be FILE_2
 
         self._bot.send_message(new_msg)
