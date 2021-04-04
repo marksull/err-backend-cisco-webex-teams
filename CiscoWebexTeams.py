@@ -498,6 +498,14 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         if activity["verb"] == "cardAction":
             new_message = self.webex_teams_api.attachment_actions.get(activity["id"])
+
+            # When a cardAction is sent it includes the messageId of the message from which
+            # the card triggered the action, but includes no parentId that we need to be able
+            # to remain within a thread. So we need to take the messageID and lookup the details
+            # of the message to be ble to determine the parentID.
+            reply_message = self.webex_teams_api.messages.get(new_message.messageId)
+            new_message.parentId = reply_message.parentId
+            
             self.callback_card(self.get_card_message(new_message))
             return
 
@@ -534,8 +542,12 @@ class CiscoWebexTeamsBackend(ErrBot):
         card_person.id = message.personId
         card_person.get_using_id()
 
-        card_room = CiscoWebexTeamsRoom(backend=self, room_id=message.roomId)
+        try:
+            parent_id = message.parentId
+        except AttributeError:
+            parent_id = message.id
 
+        card_room = CiscoWebexTeamsRoom(backend=self, room_id=message.roomId)
         card_occupant = CiscoWebexTeamsRoomOccupant(
             self, person=card_person, room=card_room
         )
@@ -544,7 +556,8 @@ class CiscoWebexTeamsBackend(ErrBot):
             body="",
             frm=card_occupant,
             to=card_room,
-            extras={"roomType": card_room.type, "parentId": card_person.id},
+            parent=parent_id,
+            extras={"roomType": card_room.type},
         )
         card_msg.card_action = message
 
@@ -576,7 +589,8 @@ class CiscoWebexTeamsBackend(ErrBot):
             body=message.markdown or message.text,
             frm=occupant,
             to=room,
-            extras={"roomType": message.roomType, "parentId": parent_id},
+            parent=parent_id,
+            extras={"roomType": message.roomType},
         )
         return msg
 
@@ -727,28 +741,20 @@ class CiscoWebexTeamsBackend(ErrBot):
                 toPersonId=mess.to.id,
                 text=mess.body,
                 markdown=md,
+                parentId=mess.parent,
                 attachments=mess.card,
                 files=mess.files,
             )
             return
 
-        if mess.parent is not None:
-            self.webex_teams_api.messages.create(
-                roomId=mess.to.room.id,
-                text=mess.body,
-                markdown=md,
-                parentId=mess.parent.extras["parentId"],
-                attachments=mess.card,
-                files=mess.files,
-            )
-        else:
-            self.webex_teams_api.messages.create(
-                roomId=mess.to.room.id,
-                text=mess.body,
-                markdown=md,
-                attachments=mess.card,
-                files=mess.files,
-            )
+        self.webex_teams_api.messages.create(
+            roomId=mess.to.room.id,
+            text=mess.body,
+            markdown=md,
+            parentId=mess.parent,
+            attachments=mess.card,
+            files=mess.files,
+        )
 
     def _teams_upload(self, stream):
         """
@@ -803,7 +809,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         self.thread_pool.apply_async(self._teams_upload, (stream,))
         return stream
 
-    def build_reply(self, mess, text=None, private=False, threaded=False):
+    def build_reply(self, mess, text=None, private=False, threaded=True):
         """
         Build a reply in the format expected by errbot by swapping the to and from source and destination
 
@@ -811,11 +817,16 @@ class CiscoWebexTeamsBackend(ErrBot):
         :param text: The text that is to be sent in reply to the message
         :param private: Boolean indicating whether the message should be directed as a private message in lieu of
                         sending it back to the room
+        :param threaded: Consider threading when creating the reply message
         :return: CiscoWebexTeamsMessage
         """
         response = self.build_message(text)
         response.frm = mess.to
         response.to = mess.frm
+
+        if threaded:
+            response.parent = mess.parent
+
         return response
 
     def disconnect_callback(self):
