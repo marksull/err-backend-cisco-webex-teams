@@ -1,13 +1,14 @@
-import asyncio
-import copyreg
-import json
 import sys
-import logging
+import json
 import uuid
-import websockets
 import string
 import random
-import os
+import asyncio
+import copyreg
+import logging
+import websockets
+
+from copy import copy
 from markdown import markdown
 
 from errbot.core import ErrBot
@@ -25,7 +26,7 @@ from errbot import rendering
 import webexteamssdk
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.7.0"
+__version__ = "1.8.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -65,6 +66,7 @@ class CiscoWebexTeamsMessage(Message):
         super(CiscoWebexTeamsMessage, self).__init__(*args, **kwargs)
         self.card = None
         self.card_action = None
+        self.files = None
 
     @property
     def is_direct(self) -> bool:
@@ -673,6 +675,42 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         """
 
+        if not hasattr(mess, "card"):
+            mess.card = None
+
+        if not hasattr(mess, "files"):
+            mess.files = None
+
+        if not isinstance(mess.files, list) and mess.files is not None:
+            mess.files = [mess.files]
+
+        # Webex teams does not support a message that contains both a message/text AND a file
+        # so lets hide this shortcoming here by creating two separate messages
+        if mess.body and mess.files:
+            new_msg = copy(mess)
+
+            # First send text message
+            new_msg.files = None
+            self.send_message(new_msg)
+
+            # And then the message with the file(s)
+            new_msg.body = None
+            new_msg.files = mess.files
+            self.send_message(new_msg)
+
+            return
+
+        # Webex teams does not support more than one file in a single message
+        # so lets hide this shortcoming here by creating multiple separate messages
+        if mess.files and len(mess.files) > 1:
+            new_msg = copy(mess)
+
+            for file in mess.files:
+                new_msg.files = [file]
+                self.send_message(new_msg)
+
+            return
+
         md = None
         if mess.body:
             # Need to strip out "markdown extra" as not supported by Webex Teams
@@ -684,15 +722,13 @@ class CiscoWebexTeamsBackend(ErrBot):
                 ],
             )
 
-        if not hasattr(mess, "card"):
-            mess.card = []
-
         if type(mess.to) == CiscoWebexTeamsPerson:
             self.webex_teams_api.messages.create(
                 toPersonId=mess.to.id,
                 text=mess.body,
                 markdown=md,
                 attachments=mess.card,
+                files=mess.files,
             )
             return
 
@@ -703,6 +739,7 @@ class CiscoWebexTeamsBackend(ErrBot):
                 markdown=md,
                 parentId=mess.parent.extras["parentId"],
                 attachments=mess.card,
+                files=mess.files,
             )
         else:
             self.webex_teams_api.messages.create(
@@ -710,6 +747,7 @@ class CiscoWebexTeamsBackend(ErrBot):
                 text=mess.body,
                 markdown=md,
                 attachments=mess.card,
+                files=mess.files,
             )
 
     def _teams_upload(self, stream):
