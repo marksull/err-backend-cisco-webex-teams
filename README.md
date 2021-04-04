@@ -63,6 +63,10 @@ BOT_PREFIX_OPTIONAL_ON_CHAT = True
 A custom card callback handler has now been implemented to make it easier to work with cards. Refer to the
 example plugin [err-example-card](examples/err-example-cards)
 
+## Uploads
+
+While Webex Teams does not support the creation of a Message with both text and file(s) for upload, this backend will now automatically split the message and the file upload into multiple messages. Refer to the example  [err-example-upload](examples/err-example-upload)
+
 ## Credit
 
 I unrestrainedly plagiarized from most of the already existing err backends and cgascoig's ciscospark-websocket implementation 
