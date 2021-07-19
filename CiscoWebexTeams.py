@@ -9,6 +9,8 @@ import logging
 import websockets
 
 from copy import copy
+from enum import Enum
+from base64 import b64encode
 from markdown import markdown
 
 from errbot.core import ErrBot
@@ -26,7 +28,7 @@ from errbot import rendering
 import webexteamssdk
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.9.0"
+__version__ = "1.10.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -43,6 +45,22 @@ DEVICE_DATA = {
     "systemName": "python-webex-teams-client",
     "systemVersion": "0.1",
 }
+
+# TODO - Need to look at service catalog (somehow?) to determine cluster
+#        for now, static to us cluster
+HYDRA_PREFIX = "ciscospark://us"
+
+
+class HydraTypes(Enum):
+    # https://github.com/webex/webex-js-sdk/blob/master/packages/node_modules/%40webex/common/src/constants.js#L62
+    ATTACHMENT_ACTION = "ATTACHMENT_ACTION"
+    CONTENT = "CONTENT"
+    MEMBERSHIP = "MEMBERSHIP"
+    MESSAGE = "MESSAGE"
+    ORGANIZATION = "ORGANIZATION"
+    PEOPLE = "PEOPLE"
+    ROOM = "ROOM"
+    TEAM = "TEAM"
 
 
 class FailedToCreateWebexDevice(Exception):
@@ -481,6 +499,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             return
 
         activity = message["data"]["activity"]
+        activity["id"] = self.build_hydra_id(activity["id"])
         new_message = None
 
         if activity["verb"] == "post":
@@ -505,7 +524,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             # of the message to be ble to determine the parentID.
             reply_message = self.webex_teams_api.messages.get(new_message.messageId)
             new_message.parentId = reply_message.parentId
-            
+
             self.callback_card(self.get_card_message(new_message))
             return
 
@@ -931,6 +950,22 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         log.debug("Backend: Prefix group chat reply yet to be implemented")  # TODO
         pass
+
+    @staticmethod
+    def build_hydra_id(uuid, message_type=HydraTypes.MESSAGE.value):
+        """
+        Convert a UUID into Hydra ID that includes geo routing
+        :param uuid: The UUID to be encoded
+        :param message_type: The type of message to be encoded
+        :return (str): The encoded uuid
+        """
+        return (
+            b64encode(f"{HYDRA_PREFIX}/{message_type}/{uuid}".encode("ascii")).decode(
+                "ascii"
+            )
+            if "-" in uuid
+            else uuid
+        )
 
     def remember(self, id, key, value):
         """
