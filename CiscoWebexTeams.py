@@ -28,7 +28,7 @@ from errbot import rendering
 import webexteamssdk
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.9.0"
+__version__ = "1.10.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
