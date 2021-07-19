@@ -53,14 +53,14 @@ HYDRA_PREFIX = "ciscospark://us"
 
 class HydraTypes(Enum):
     # https://github.com/webex/webex-js-sdk/blob/master/packages/node_modules/%40webex/common/src/constants.js#L62
-    ATTACHMENT_ACTION = 'ATTACHMENT_ACTION'
-    CONTENT = 'CONTENT'
-    MEMBERSHIP = 'MEMBERSHIP'
-    MESSAGE = 'MESSAGE'
-    ORGANIZATION = 'ORGANIZATION'
-    PEOPLE = 'PEOPLE'
-    ROOM = 'ROOM'
-    TEAM = 'TEAM'
+    ATTACHMENT_ACTION = "ATTACHMENT_ACTION"
+    CONTENT = "CONTENT"
+    MEMBERSHIP = "MEMBERSHIP"
+    MESSAGE = "MESSAGE"
+    ORGANIZATION = "ORGANIZATION"
+    PEOPLE = "PEOPLE"
+    ROOM = "ROOM"
+    TEAM = "TEAM"
 
 
 class FailedToCreateWebexDevice(Exception):
@@ -524,7 +524,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             # of the message to be ble to determine the parentID.
             reply_message = self.webex_teams_api.messages.get(new_message.messageId)
             new_message.parentId = reply_message.parentId
-            
+
             self.callback_card(self.get_card_message(new_message))
             return
 
@@ -959,7 +959,13 @@ class CiscoWebexTeamsBackend(ErrBot):
         :param message_type: The type of message to be encoded
         :return (str): The encoded uuid
         """
-        return b64encode(f"{HYDRA_PREFIX}/{message_type}/{uuid}".encode("ascii")).decode("ascii") if "-" in uuid else uuid
+        return (
+            b64encode(f"{HYDRA_PREFIX}/{message_type}/{uuid}".encode("ascii")).decode(
+                "ascii"
+            )
+            if "-" in uuid
+            else uuid
+        )
 
     def remember(self, id, key, value):
         """
