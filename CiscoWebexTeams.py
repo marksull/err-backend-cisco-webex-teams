@@ -515,7 +515,9 @@ class CiscoWebexTeamsBackend(ErrBot):
             return
 
         if activity["verb"] == "cardAction":
-            new_message = self.webex_teams_api.attachment_actions.get(activity["id"])
+            new_message = self.webex_teams_api.attachment_actions.get(
+                self.build_hydra_id(activity["id"],
+                                    message_type=HydraTypes.ATTACHMENT_ACTION.value))
 
             # When a cardAction is sent it includes the messageId of the message from which
             # the card triggered the action, but includes no parentId that we need to be able
