@@ -28,7 +28,7 @@ from errbot import rendering
 import webexteamssdk
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.11.0"
+__version__ = "1.12.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -502,7 +502,9 @@ class CiscoWebexTeamsBackend(ErrBot):
         new_message = None
 
         if activity["verb"] == "post":
-            new_message = self.webex_teams_api.messages.get(self.build_hydra_id(activity["id"]))
+            new_message = self.webex_teams_api.messages.get(
+                self.build_hydra_id(activity["id"])
+            )
 
             if new_message.personEmail in self.bot_identifier.emails:
                 logging.debug("Ignoring message from myself")
@@ -516,8 +518,10 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         if activity["verb"] == "cardAction":
             new_message = self.webex_teams_api.attachment_actions.get(
-                self.build_hydra_id(activity["id"],
-                                    message_type=HydraTypes.ATTACHMENT_ACTION.value))
+                self.build_hydra_id(
+                    activity["id"], message_type=HydraTypes.ATTACHMENT_ACTION.value
+                )
+            )
 
             # When a cardAction is sent it includes the messageId of the message from which
             # the card triggered the action, but includes no parentId that we need to be able
