@@ -28,7 +28,7 @@ from errbot import rendering
 import webexteamssdk
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.10.0"
+__version__ = "1.11.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -499,11 +499,10 @@ class CiscoWebexTeamsBackend(ErrBot):
             return
 
         activity = message["data"]["activity"]
-        activity["id"] = self.build_hydra_id(activity["id"])
         new_message = None
 
         if activity["verb"] == "post":
-            new_message = self.webex_teams_api.messages.get(activity["id"])
+            new_message = self.webex_teams_api.messages.get(self.build_hydra_id(activity["id"]))
 
             if new_message.personEmail in self.bot_identifier.emails:
                 logging.debug("Ignoring message from myself")
