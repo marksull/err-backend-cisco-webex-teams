@@ -28,7 +28,7 @@ from errbot import rendering
 import webexteamssdk
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.12.0"
+__version__ = "1.13.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -547,6 +547,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         if not callback_card:
             callback_card = "callback_card"
+
         for plugin in self.plugin_manager.get_all_active_plugins():
             plugin_name = plugin.name
             log.debug(f"Triggering {callback_card} on {plugin_name}.",)
