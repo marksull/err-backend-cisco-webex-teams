@@ -522,6 +522,7 @@ class CiscoWebexTeamsBackend(ErrBot):
                     activity["id"], message_type=HydraTypes.ATTACHMENT_ACTION.value
                 )
             )
+            callback_card = new_message.inputs.get("_callback_card")
 
             # When a cardAction is sent it includes the messageId of the message from which
             # the card triggered the action, but includes no parentId that we need to be able
@@ -530,7 +531,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             reply_message = self.webex_teams_api.messages.get(new_message.messageId)
             new_message.parentId = reply_message.parentId
 
-            self.callback_card(self.get_card_message(new_message))
+            self.callback_card(self.get_card_message(new_message), callback_card)
             return
 
         if not new_message:
@@ -538,22 +539,25 @@ class CiscoWebexTeamsBackend(ErrBot):
                 f'Ignoring message where the verb is not type "post" or "cardAction". Verb is {activity["verb"]}'
             )
 
-    def callback_card(self, message):
+    def callback_card(self, message, callback_card):
         """
         Process a card callback.
         :param message: Message to be processed
+        :param callback_card: Function to trigger
         """
+        if not callback_card:
+            callback_card = "callback_card"
         for plugin in self.plugin_manager.get_all_active_plugins():
             plugin_name = plugin.name
-            log.debug(f"Triggering callback_card on {plugin_name}.",)
+            log.debug(f"Triggering {callback_card} on {plugin_name}.",)
             # noinspection PyBroadException
             try:
                 # As this is a custom callback specific to this backend, there is no
                 # expectation that all plugins with have implemented this method
-                if hasattr(plugin, "callback_card"):
-                    getattr(plugin, "callback_card")(message)
+                if hasattr(plugin, callback_card):
+                    getattr(plugin, callback_card)(message)
             except Exception:
-                log.exception(f"callback_card on {plugin_name} crashed.")
+                log.exception(f"{callback_card} on {plugin_name} crashed.")
 
     def get_card_message(self, message):
         """
