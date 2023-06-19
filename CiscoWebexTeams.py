@@ -776,14 +776,32 @@ class CiscoWebexTeamsBackend(ErrBot):
             )
             return
 
-        self.webex_teams_api.messages.create(
-            roomId=mess.to.room.id,
-            text=mess.body,
-            markdown=md,
-            parentId=mess.parent,
-            attachments=mess.card,
-            files=mess.files,
+        self.callback_send_message(
+                self.webex_teams_api.messages.create(
+                        roomId=mess.to.room.id,
+                        text=mess.body,
+                        markdown=md,
+                        parentId=mess.parent,
+                        attachments=mess.card,
+                        files=mess.files,
+                )
         )
+
+    def callback_send_message(self, message):
+        """
+        Send the message to the send message callback if a plugin is listening
+        :param message: The message to send via the callback
+        """
+        for plugin in self.plugin_manager.get_all_active_plugins():
+            # noinspection PyBroadException
+            try:
+                # As this is a custom callback specific to this backend, there is no
+                # expectation that all plugins with have implemented this method
+                if hasattr(plugin, 'callback_send_message'):
+                    log.debug(f"Triggering 'callback_send_message' on {plugin.name}.")
+                    getattr(plugin, 'callback_send_message')(message)
+            except Exception:
+                log.exception(f"'callback_send_message' on {plugin.name} raised an exception.")
 
     def _teams_upload(self, stream):
         """
