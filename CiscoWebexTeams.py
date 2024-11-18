@@ -463,7 +463,15 @@ class CiscoWebexTeamsBackend(ErrBot):
             )
             config.MESSAGE_SIZE_LIMIT = CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
 
-        log.debug("Setting up SparkAPI")
+        self.permitted_domains = getattr(config, "PERMITTED_DOMAINS", [])
+        if type(self.permitted_domains) not in [list, set]:
+            log.fatal(
+                    "PERMITTED_DOMAINS must be of type 'list' or 'set' in config.py."
+            )
+            sys.exit(1)
+
+
+        log.debug("Setting up WebexAPI")
         self.webex_teams_api = webexteamssdk.WebexTeamsAPI(access_token=self._bot_token)
 
         log.debug("Setting up device on Webex Teams")
@@ -510,9 +518,15 @@ class CiscoWebexTeamsBackend(ErrBot):
                 logging.debug("Ignoring message from myself")
                 return
 
+            if self.permitted_domains and new_message.personEmail.split("@")[1] not in self.permitted_domains:
+                logging.debug(f"Ignoring message from `{new_message.personEmail}` "
+                              f"as not in permitted domains `{self.permitted_domains}`")
+                return
+
             logging.info(
                 f"Message from {new_message.personEmail}: {new_message.text}\n"
             )
+
             self.callback_message(self.get_message(new_message))
             return
 
