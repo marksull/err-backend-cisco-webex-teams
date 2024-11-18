@@ -58,6 +58,13 @@ to enable BOT_PREFIX_OPTIONAL_ON_CHAT so that the prefix is not required for dir
 BOT_PREFIX_OPTIONAL_ON_CHAT = True
 ```
 
+To restrict the bot to only respond to commands to users from specific domains only, define PERMITTED_DOMAINS:
+
+```python
+PERMITTED_DOMAINS = ["mydomain.com"]
+```
+
+
 ## Cards
 
 A custom card callback handler has now been implemented to make it easier to work with cards. Refer to the
