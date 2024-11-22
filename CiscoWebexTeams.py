@@ -697,14 +697,6 @@ class CiscoWebexTeamsBackend(ErrBot):
         if not isinstance(mess.card, list) and mess.card is not None:
             mess.card = [mess.card]
 
-        # webebteamssdk currently has a bug that to results in cards not being included as attachments
-        # https://github.com/CiscoDevNet/webexteamssdk/pull/141
-        # TODO: This section can be removed once the above pull request is merged
-        for item, attachment in enumerate(mess.card):
-            if isinstance(attachment, AdaptiveCard):
-                mess.card[item] = webexteamssdk.utils.make_attachment(attachment)
-        # End of workaround
-
         self.send_message(mess)
 
     def send_message(self, mess):
