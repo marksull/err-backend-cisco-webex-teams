@@ -15,8 +15,33 @@ The websocket implementation comes from: https://github.com/cgascoig/ciscospark-
 
 This backend is currently under development.
 
+## Quick Start
+
+The quickest way to get started is to use Docker to build the image and run the preconfigured container.
+
+1) Clone this repo
+2) Build the Docker image: `make build`
+3) Copy the `.env` file to `.env.local` and update the environment variables
+4) Run the Docker container: `make run`
+
+This will start the container and run the bot. Start a 1:1 chat with the bot using the bot's email 
+address created during the teams bot registration process.
+
+Use the command `help` to see the available commands.
+
+There are four example plugins included in the container. The see the list of plugins use the command `status plugins`.
+
+To see the examples in action, use the following commands:
+1) `simple message` - get a simple message in response
+2) `example card` - get a card, selected an option from the dropdown, and recieve a response
+3) `example upload` - get a message and multiple example files uploaded
+4) `simple message with callback` - get a simple message in response with a callback (check the logs for the callback response)
+
+
 
 ## Installation
+
+If you want to set up your own custom but, you can follow the instructions below.
 
 ```
 git clone https://github.com/marksull/err-backend-cisco-webex-teams.git
