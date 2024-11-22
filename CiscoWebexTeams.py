@@ -331,6 +331,8 @@ class CiscoWebexTeamsRoom(Room):
     def join(self, username=None, password=None):
 
         log.debug(f"Joining room {self.title} ({self.id})")
+
+        # noinspection PyBroadException
         try:
             self._backend.webex_teams_api.memberships.create(
                 self.id, self._backend.bot_identifier.id
@@ -353,16 +355,20 @@ class CiscoWebexTeamsRoom(Room):
                 return
 
         except Exception:
-            log.exception("Failed to join room {} ({})".format(self.title, self.id))
-            return
+            log.exception(f"Failed to join room {self.title} ({self.id})")
 
     def leave(self, reason=None):
-        log.debug("Leave room yet to be implemented")  # TODO
+        """
+        Leave a room
+
+        Webex Teams does not support leaving a room via the API.
+        """
+        log.debug("Leave room yet to be implemented")
         pass
 
     def create(self):
         """
-        Create a new room. Membership to the room is provide by default.
+        Create a new room. Membership to the room is provided by default.
         """
         self._room = self._backend.webex_teams_api.rooms.create(self.title)
         self._room_id = self._room.id
@@ -383,7 +389,7 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def exists(self):
-        return not self._room.created == None
+        return self._room.created is not None
 
     @property
     def joined(self):
@@ -418,9 +424,7 @@ class CiscoWebexTeamsRoom(Room):
             )
 
         log.debug(
-            "Total occupants for room {} ({}) is {} ".format(
-                self.title, self.id, len(occupants)
-            )
+            f"Total occupants for room {self.title} ({self.id}) is {len(occupants)}"
         )
 
         return occupants
@@ -463,9 +467,8 @@ class CiscoWebexTeamsBackend(ErrBot):
         # Adjust message size limit to cater for the non-standard size limit
         if config.MESSAGE_SIZE_LIMIT > CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT:
             log.info(
-                "Capping MESSAGE_SIZE_LIMIT to {} which is the maximum length allowed by CiscoWebexTeams".format(
-                    CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
-                )
+                f"Capping MESSAGE_SIZE_LIMIT to {CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT} "
+                "which is the maximum length allowed by CiscoWebexTeams"
             )
             config.MESSAGE_SIZE_LIMIT = CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
 
@@ -488,7 +491,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             self, self.webex_teams_api.people.me()
         )
 
-        log.debug("Done! I'm connected as {}".format(self.bot_identifier.email))
+        log.debug(f"Done! I'm connected as {self.bot_identifier.email}")
 
         self._register_identifiers_pickling()
 
@@ -948,7 +951,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         resp = self.webex_teams_api._session.post(DEVICES_URL, json=DEVICE_DATA)
         if resp is None:
             raise FailedToCreateWebexDevice(
-                "Could not create Webex Teams device using {}".format(DEVICES_URL)
+                f"Could not create Webex Teams device using {DEVICES_URL}"
             )
 
         self.device_info = resp
