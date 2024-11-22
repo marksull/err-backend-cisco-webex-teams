@@ -14,6 +14,4 @@ RUN pip install -r requirements.txt
 
 COPY CiscoWebexTeams.config.py config.py
 
-WORKDIR /home/errbot
-
 USER errbot
