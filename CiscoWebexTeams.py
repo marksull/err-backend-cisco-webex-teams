@@ -95,6 +95,7 @@ class CiscoWebexTeamsMessage(Message):
         return not self.is_direct
 
 
+# noinspection PyProtectedMember
 class CiscoWebexTeamsPerson(Person):
     """
     A Cisco Webex Teams Person
@@ -202,7 +203,7 @@ class CiscoWebexTeamsPerson(Person):
 
     @property
     def client(self):
-        return ""
+        return self.id
 
     @property
     def nick(self):
@@ -437,6 +438,7 @@ class CiscoWebexTeamsRoom(Room):
     __str__ = __unicode__
 
 
+# noinspection PyUnresolvedReferences
 class CiscoWebexTeamsBackend(ErrBot):
     """
     This is the CiscoWebexTeams backend for errbot.
