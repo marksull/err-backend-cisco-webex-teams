@@ -102,7 +102,6 @@ class CiscoWebexTeamsPerson(Person):
     """
 
     def __init__(self, backend, attributes=None):
-
         self._backend = backend
         attributes = attributes or {}
 
@@ -235,7 +234,6 @@ class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
     """
 
     def __init__(self, backend, room=None, person=None):
-
         room = room or {}
         person = person or {}
 
@@ -262,7 +260,6 @@ class CiscoWebexTeamsRoom(Room):
     """
 
     def __init__(self, backend, room_id=None, room_title=None):
-
         self._backend = backend
         self._room_id = room_id
         self._room_title = room_title
@@ -329,7 +326,6 @@ class CiscoWebexTeamsRoom(Room):
     # Errbot API
 
     def join(self, username=None, password=None):
-
         log.debug(f"Joining room {self.title} ({self.id})")
 
         # noinspection PyBroadException
@@ -407,7 +403,6 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def occupants(self):
-
         if not self.exists:
             raise RoomDoesNotExistError(
                 f"Room {self.title or self.id} does not exist, or the bot does not have access"
@@ -449,7 +444,6 @@ class CiscoWebexTeamsBackend(ErrBot):
     """
 
     def __init__(self, config):
-
         super().__init__(config)
 
         bot_identity = config.BOT_IDENTITY
@@ -474,11 +468,8 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         self.permitted_domains = getattr(config, "PERMITTED_DOMAINS", [])
         if type(self.permitted_domains) not in [list, set]:
-            log.fatal(
-                    "PERMITTED_DOMAINS must be of type 'list' or 'set' in config.py."
-            )
+            log.fatal("PERMITTED_DOMAINS must be of type 'list' or 'set' in config.py.")
             sys.exit(1)
-
 
         log.debug("Setting up WebexAPI")
         self.webex_teams_api = webexteamssdk.WebexTeamsAPI(access_token=self._bot_token)
@@ -527,9 +518,14 @@ class CiscoWebexTeamsBackend(ErrBot):
                 logging.debug("Ignoring message from myself")
                 return
 
-            if self.permitted_domains and new_message.personEmail.split("@")[1] not in self.permitted_domains:
-                logging.debug(f"Ignoring message from `{new_message.personEmail}` "
-                              f"as not in permitted domains `{self.permitted_domains}`")
+            if (
+                self.permitted_domains
+                and new_message.personEmail.split("@")[1] not in self.permitted_domains
+            ):
+                logging.debug(
+                    f"Ignoring message from `{new_message.personEmail}` "
+                    f"as not in permitted domains `{self.permitted_domains}`"
+                )
                 return
 
             logging.info(
@@ -573,7 +569,9 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         for plugin in self.plugin_manager.get_all_active_plugins():
             plugin_name = plugin.name
-            log.debug(f"Triggering {callback_card} on {plugin_name}.",)
+            log.debug(
+                f"Triggering {callback_card} on {plugin_name}.",
+            )
             # noinspection PyBroadException
             try:
                 # As this is a custom callback specific to this backend, there is no
@@ -775,14 +773,14 @@ class CiscoWebexTeamsBackend(ErrBot):
             return
 
         self.callback_send_message(
-                self.webex_teams_api.messages.create(
-                        roomId=mess.to.room.id,
-                        text=mess.body,
-                        markdown=md,
-                        parentId=mess.parent,
-                        attachments=mess.card,
-                        files=mess.files,
-                )
+            self.webex_teams_api.messages.create(
+                roomId=mess.to.room.id,
+                text=mess.body,
+                markdown=md,
+                parentId=mess.parent,
+                attachments=mess.card,
+                files=mess.files,
+            )
         )
 
     def callback_send_message(self, message):
@@ -795,11 +793,13 @@ class CiscoWebexTeamsBackend(ErrBot):
             try:
                 # As this is a custom callback specific to this backend, there is no
                 # expectation that all plugins with have implemented this method
-                if hasattr(plugin, 'callback_send_message'):
+                if hasattr(plugin, "callback_send_message"):
                     log.debug(f"Triggering 'callback_send_message' on {plugin.name}.")
-                    getattr(plugin, 'callback_send_message')(message)
+                    getattr(plugin, "callback_send_message")(message)
             except Exception:
-                log.exception(f"'callback_send_message' on {plugin.name} raised an exception.")
+                log.exception(
+                    f"'callback_send_message' on {plugin.name} raised an exception."
+                )
 
     def _teams_upload(self, stream):
         """
@@ -971,7 +971,9 @@ class CiscoWebexTeamsBackend(ErrBot):
         log.debug("Backend: Change presence yet to be implemented")
         pass
 
-    def prefix_groupchat_reply(self, message: Message, identifier: CiscoWebexTeamsPerson):
+    def prefix_groupchat_reply(
+        self, message: Message, identifier: CiscoWebexTeamsPerson
+    ):
         """
         Backend: Prefix group chat reply
 
