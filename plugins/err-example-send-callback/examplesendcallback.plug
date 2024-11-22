@@ -6,4 +6,4 @@ Module = examplesendcallback
 Description = This is a simple plugin example to show how to create a send callback handler
 
 [Python]
-Version = 2+
+Version = 3
