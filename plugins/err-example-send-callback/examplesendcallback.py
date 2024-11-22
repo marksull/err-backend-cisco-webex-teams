@@ -4,6 +4,10 @@ from pathlib import Path
 
 class ExampleSendCallback(BotPlugin):
 
+    @botcmd
+    def simple_message_with_callback(self, msg, _):
+        yield "This is a Simple Teams Message which will trigger a callback"
+
     def callback_send_message(self, message):
         """
         Inspect a message after it has been sent

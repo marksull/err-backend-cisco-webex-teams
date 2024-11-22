@@ -1,0 +1,9 @@
+[Core]
+Name = ExampleSimple
+Module = examplesimple
+
+[Documentation]
+Description = This is a simple plugin example
+
+[Python]
+Version = 3

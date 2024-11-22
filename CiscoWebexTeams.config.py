@@ -5,7 +5,7 @@ BACKEND = "CiscoWebexTeams"
 
 BOT_IDENTITY = {"TOKEN": os.environ.get("BOT_IDENTITY_TOKEN")}
 BOT_DATA_DIR = "/home/errbot/data"
-BOT_EXTRA_PLUGIN_DIR = "/home/errbot/plugins"
+BOT_EXTRA_PLUGIN_DIR = "/home/errbot/backends/err-backend-cisco-webex-teams/plugins/"
 BOT_EXTRA_BACKEND_DIR = f"/home/errbot/backends/err-backend-cisco-webex-teams"
 BOT_PREFIX = f"{os.environ.get('BOT_PREFIX')} "
 BOT_LOG_LEVEL = logging.DEBUG

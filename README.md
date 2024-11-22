@@ -68,7 +68,7 @@ PERMITTED_DOMAINS = ["mydomain.com"]
 ## Cards
 
 A custom card callback handler has now been implemented to make it easier to work with cards. Refer to the
-example plugin [err-example-card](examples/err-example-cards)
+example plugin [err-example-card](plugins/err-example-cards)
 
 ## Uploads
 
