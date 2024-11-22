@@ -637,15 +637,6 @@ class CiscoWebexTeamsBackend(ErrBot):
         )
         return msg
 
-    def follow_room(self, room):
-        """
-        Backend: Follow Room yet to be implemented
-
-        :param room:
-        :return:
-        """
-        log.debug("Backend: Follow Room yet to be implemented")  # TODO
-
     def rooms(self):
         """
         Backend: Rooms that the bot is a member of
