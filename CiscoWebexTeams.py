@@ -648,14 +648,6 @@ class CiscoWebexTeamsBackend(ErrBot):
             f"{room.title} ({room.type})" for room in self.webex_teams_api.rooms.list()
         ]
 
-    def contacts(self):
-        """
-        Backend: Contacts yet to be implemented
-
-        :return:
-        """
-        log.debug("Backend: Contacts yet to be implemented")  # TODO
-
     def build_identifier(self, strrep):
         """
         Build an errbot identifier using the Webex Teams email address of the person
