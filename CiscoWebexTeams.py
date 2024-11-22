@@ -209,6 +209,10 @@ class CiscoWebexTeamsPerson(Person):
         return self.teams_person.nickName
 
     @property
+    def group_prefix(self):
+        return f"@{self.nick}" or (f"@{self.email.split('@')[0]}" if self.email else "")
+
+    @property
     def fullname(self):
         return self.displayName
 
@@ -834,7 +838,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         Send a file to Cisco Webex Teams
 
-        :param user: is the identifier of the person you want to send it to.
+        :param identifier: is the identifier of the person or room you want to send it to.
         :param fsource: is a file object you want to send.
         :param name: is an optional filename for it.
         :param size: not supported in Webex Teams backend
@@ -847,7 +851,8 @@ class CiscoWebexTeamsBackend(ErrBot):
 
     def build_reply(self, mess, text=None, private=False, threaded=True):
         """
-        Build a reply in the format expected by errbot by swapping the to and from source and destination
+        Build a reply in the format expected by errbot by swapping the "to" and
+        "from" source and destination
 
         :param mess: The original CiscoWebexTeamsMessage object that will be replied to
         :param text: The text that is to be sent in reply to the message
@@ -919,6 +924,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         finally:
             self.disconnect_callback()
 
+    # noinspection PyProtectedMember
     def _get_device_info(self):
         """
         Setup device in Webex Teams to bridge events across websocket
@@ -950,23 +956,25 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         Backend: Change presence yet to be implemented
 
+        Not implemented in Webex Teams API:
+        https://ciscocollabcustomer.ideas.aha.io/ideas/WXCUST-I-3455
+
         :param status:
         :param message:
         :return:
         """
-        log.debug("Backend: Change presence yet to be implemented")  # TODO
+        log.debug("Backend: Change presence yet to be implemented")
         pass
 
-    def prefix_groupchat_reply(self, message, identifier):
+    def prefix_groupchat_reply(self, message: Message, identifier: CiscoWebexTeamsPerson):
         """
-        Backend: Prefix group chat reply yet to be implemented
+        Backend: Prefix group chat reply
 
-        :param message:
-        :param identifier:
-        :return:
+        :param message: The message to be sent
+        :param identifier : The identifier of the person
         """
-        log.debug("Backend: Prefix group chat reply yet to be implemented")  # TODO
-        pass
+        super().prefix_groupchat_reply(message, identifier)
+        message.body = f"{identifier.group_prefix} {message.body}"
 
     @staticmethod
     def build_hydra_id(uuid, message_type=HydraTypes.MESSAGE.value):
