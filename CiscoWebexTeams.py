@@ -206,7 +206,7 @@ class CiscoWebexTeamsPerson(Person):
 
     @property
     def nick(self):
-        return ""
+        return self.teams_person.nickName
 
     @property
     def fullname(self):
