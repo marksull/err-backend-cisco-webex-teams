@@ -1,31 +1,27 @@
-import sys
-import json
-import uuid
-import string
-import random
 import asyncio
 import copyreg
+import json
 import logging
-import websockets
-
+import random
+import string
+import uuid
+from base64 import b64encode
 from copy import copy
 from enum import Enum
-from base64 import b64encode
-from markdown import markdown
 
-from errbot.core import ErrBot
-from errbot.backends.base import (
-    Message,
-    Person,
-    Room,
-    RoomOccupant,
-    OFFLINE,
-    RoomDoesNotExistError,
-    Stream,
-)
-from errbot import rendering
-
+import sys
 import webexteamssdk
+import websockets
+from errbot import rendering
+from errbot.backends.base import Message
+from errbot.backends.base import OFFLINE
+from errbot.backends.base import Person
+from errbot.backends.base import Room
+from errbot.backends.base import RoomDoesNotExistError
+from errbot.backends.base import RoomOccupant
+from errbot.backends.base import Stream
+from errbot.core import ErrBot
+from markdown import markdown
 from webexteamssdk.models.cards import AdaptiveCard
 
 __version__ = "1.15.0"
