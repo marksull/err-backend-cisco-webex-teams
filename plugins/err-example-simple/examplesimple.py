@@ -1,4 +1,5 @@
-from errbot import BotPlugin, botcmd
+from errbot import botcmd
+from errbot import BotPlugin
 
 
 class ExampleSimple(BotPlugin):
