@@ -151,6 +151,10 @@ class CiscoWebexTeamsPerson(Person):
     def avatar(self):
         return self.teams_person.avatar
 
+    @property
+    def nickName(self):
+        return self.teams_person.nickName
+
     def find_using_email(self):
         """
         Return the FIRST Cisco Webex Teams person found when searching using an email address
@@ -202,7 +206,7 @@ class CiscoWebexTeamsPerson(Person):
 
     @property
     def nick(self):
-        return self.teams_person.nickName
+        return self.nickName
 
     @property
     def group_prefix(self):

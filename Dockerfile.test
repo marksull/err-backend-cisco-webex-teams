@@ -1,0 +1,10 @@
+FROM err-teams:local
+
+USER root
+
+COPY . .
+
+RUN pip install -r requirements.txt
+
+USER errbot
+
