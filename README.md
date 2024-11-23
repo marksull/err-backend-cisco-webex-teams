@@ -33,15 +33,30 @@ There are four example plugins included in the container. The see the list of pl
 
 To see the examples in action, use the following commands:
 1) `simple message` - get a simple message in response
-2) `example card` - get a card, selected an option from the dropdown, and recieve a response
+2) `example card` - get a card, selected an option from the dropdown, and receive a response
 3) `example upload` - get a message and multiple example files uploaded
 4) `simple message with callback` - get a simple message in response with a callback (check the logs for the callback response)
 
+To stop the container, issue a `Control-c`.
+
+### Quick Command
+
+Using the Quick Start method, here is how you would introduce your own simple command and test it out:
+
+1) Within this repo, open the file [plugins/err-example-simple/examplesimple.py](plugins/err-example-simple/examplesimple.py)
+2) Add a new command of your choosing, for example:
+```python
+    @botcmd
+    def my_new_command(self, msg, _):
+        yield f"Hello, {msg.frm.email}! This is your new command."
+```
+3) Build and run Docker image using the LOCAL repo that you just modified: `make test_build_run`
+4) Issue the command `my new command` in a 1:1 chat with the bot
 
 
 ## Installation
 
-If you want to set up your own custom but, you can follow the instructions below.
+If you want to set up your own custom bot, you can follow the instructions below.
 
 ```
 git clone https://github.com/marksull/err-backend-cisco-webex-teams.git
@@ -97,7 +112,8 @@ example plugin [err-example-card](plugins/err-example-cards)
 
 ## Uploads
 
-While Webex Teams does not support the creation of a Message with both text and file(s) for upload, this backend will now automatically split the message and the file upload into multiple messages. Refer to the example  [err-example-upload](examples/err-example-upload)
+While Webex Teams does not support the creation of a Message with both text and file(s) for upload, this backend 
+will now automatically split the message and the file upload into multiple messages. Refer to the example  [err-example-upload](plugins/err-example-upload)
 
 ## Credit
 

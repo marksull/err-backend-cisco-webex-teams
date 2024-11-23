@@ -1,34 +1,30 @@
-import sys
-import json
-import uuid
-import string
-import random
 import asyncio
 import copyreg
+import json
 import logging
-import websockets
-
+import random
+import string
+import uuid
+from base64 import b64encode
 from copy import copy
 from enum import Enum
-from base64 import b64encode
-from markdown import markdown
 
-from errbot.core import ErrBot
-from errbot.backends.base import (
-    Message,
-    Person,
-    Room,
-    RoomOccupant,
-    OFFLINE,
-    RoomDoesNotExistError,
-    Stream,
-)
-from errbot import rendering
-
+import sys
 import webexteamssdk
+import websockets
+from errbot import rendering
+from errbot.backends.base import Message
+from errbot.backends.base import OFFLINE
+from errbot.backends.base import Person
+from errbot.backends.base import Room
+from errbot.backends.base import RoomDoesNotExistError
+from errbot.backends.base import RoomOccupant
+from errbot.backends.base import Stream
+from errbot.core import ErrBot
+from markdown import markdown
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.15.0"
+__version__ = "1.16.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -95,13 +91,13 @@ class CiscoWebexTeamsMessage(Message):
         return not self.is_direct
 
 
+# noinspection PyProtectedMember
 class CiscoWebexTeamsPerson(Person):
     """
     A Cisco Webex Teams Person
     """
 
     def __init__(self, backend, attributes=None):
-
         self._backend = backend
         attributes = attributes or {}
 
@@ -155,6 +151,10 @@ class CiscoWebexTeamsPerson(Person):
     def avatar(self):
         return self.teams_person.avatar
 
+    @property
+    def nickName(self):
+        return self.teams_person.nickName
+
     def find_using_email(self):
         """
         Return the FIRST Cisco Webex Teams person found when searching using an email address
@@ -202,11 +202,15 @@ class CiscoWebexTeamsPerson(Person):
 
     @property
     def client(self):
-        return ""
+        return self.id
 
     @property
     def nick(self):
-        return ""
+        return self.nickName
+
+    @property
+    def group_prefix(self):
+        return f"@{self.nick}" or (f"@{self.email.split('@')[0]}" if self.email else "")
 
     @property
     def fullname(self):
@@ -230,7 +234,6 @@ class CiscoWebexTeamsRoomOccupant(CiscoWebexTeamsPerson, RoomOccupant):
     """
 
     def __init__(self, backend, room=None, person=None):
-
         room = room or {}
         person = person or {}
 
@@ -257,7 +260,6 @@ class CiscoWebexTeamsRoom(Room):
     """
 
     def __init__(self, backend, room_id=None, room_title=None):
-
         self._backend = backend
         self._room_id = room_id
         self._room_title = room_title
@@ -324,8 +326,9 @@ class CiscoWebexTeamsRoom(Room):
     # Errbot API
 
     def join(self, username=None, password=None):
-
         log.debug(f"Joining room {self.title} ({self.id})")
+
+        # noinspection PyBroadException
         try:
             self._backend.webex_teams_api.memberships.create(
                 self.id, self._backend.bot_identifier.id
@@ -348,16 +351,20 @@ class CiscoWebexTeamsRoom(Room):
                 return
 
         except Exception:
-            log.exception("Failed to join room {} ({})".format(self.title, self.id))
-            return
+            log.exception(f"Failed to join room {self.title} ({self.id})")
 
     def leave(self, reason=None):
-        log.debug("Leave room yet to be implemented")  # TODO
+        """
+        Leave a room
+
+        Webex Teams does not support leaving a room via the API.
+        """
+        log.debug("Leave room yet to be implemented")
         pass
 
     def create(self):
         """
-        Create a new room. Membership to the room is provide by default.
+        Create a new room. Membership to the room is provided by default.
         """
         self._room = self._backend.webex_teams_api.rooms.create(self.title)
         self._room_id = self._room.id
@@ -378,7 +385,7 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def exists(self):
-        return not self._room.created == None
+        return self._room.created is not None
 
     @property
     def joined(self):
@@ -396,7 +403,6 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def occupants(self):
-
         if not self.exists:
             raise RoomDoesNotExistError(
                 f"Room {self.title or self.id} does not exist, or the bot does not have access"
@@ -413,9 +419,7 @@ class CiscoWebexTeamsRoom(Room):
             )
 
         log.debug(
-            "Total occupants for room {} ({}) is {} ".format(
-                self.title, self.id, len(occupants)
-            )
+            f"Total occupants for room {self.title} ({self.id}) is {len(occupants)}"
         )
 
         return occupants
@@ -433,13 +437,13 @@ class CiscoWebexTeamsRoom(Room):
     __str__ = __unicode__
 
 
+# noinspection PyUnresolvedReferences
 class CiscoWebexTeamsBackend(ErrBot):
     """
     This is the CiscoWebexTeams backend for errbot.
     """
 
     def __init__(self, config):
-
         super().__init__(config)
 
         bot_identity = config.BOT_IDENTITY
@@ -457,19 +461,15 @@ class CiscoWebexTeamsBackend(ErrBot):
         # Adjust message size limit to cater for the non-standard size limit
         if config.MESSAGE_SIZE_LIMIT > CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT:
             log.info(
-                "Capping MESSAGE_SIZE_LIMIT to {} which is the maximum length allowed by CiscoWebexTeams".format(
-                    CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
-                )
+                f"Capping MESSAGE_SIZE_LIMIT to {CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT} "
+                "which is the maximum length allowed by CiscoWebexTeams"
             )
             config.MESSAGE_SIZE_LIMIT = CISCO_WEBEX_TEAMS_MESSAGE_SIZE_LIMIT
 
         self.permitted_domains = getattr(config, "PERMITTED_DOMAINS", [])
         if type(self.permitted_domains) not in [list, set]:
-            log.fatal(
-                    "PERMITTED_DOMAINS must be of type 'list' or 'set' in config.py."
-            )
+            log.fatal("PERMITTED_DOMAINS must be of type 'list' or 'set' in config.py.")
             sys.exit(1)
-
 
         log.debug("Setting up WebexAPI")
         self.webex_teams_api = webexteamssdk.WebexTeamsAPI(access_token=self._bot_token)
@@ -482,7 +482,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             self, self.webex_teams_api.people.me()
         )
 
-        log.debug("Done! I'm connected as {}".format(self.bot_identifier.email))
+        log.debug(f"Done! I'm connected as {self.bot_identifier.email}")
 
         self._register_identifiers_pickling()
 
@@ -518,9 +518,14 @@ class CiscoWebexTeamsBackend(ErrBot):
                 logging.debug("Ignoring message from myself")
                 return
 
-            if self.permitted_domains and new_message.personEmail.split("@")[1] not in self.permitted_domains:
-                logging.debug(f"Ignoring message from `{new_message.personEmail}` "
-                              f"as not in permitted domains `{self.permitted_domains}`")
+            if (
+                self.permitted_domains
+                and new_message.personEmail.split("@")[1] not in self.permitted_domains
+            ):
+                logging.debug(
+                    f"Ignoring message from `{new_message.personEmail}` "
+                    f"as not in permitted domains `{self.permitted_domains}`"
+                )
                 return
 
             logging.info(
@@ -564,7 +569,9 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         for plugin in self.plugin_manager.get_all_active_plugins():
             plugin_name = plugin.name
-            log.debug(f"Triggering {callback_card} on {plugin_name}.",)
+            log.debug(
+                f"Triggering {callback_card} on {plugin_name}.",
+            )
             # noinspection PyBroadException
             try:
                 # As this is a custom callback specific to this backend, there is no
@@ -637,15 +644,6 @@ class CiscoWebexTeamsBackend(ErrBot):
         )
         return msg
 
-    def follow_room(self, room):
-        """
-        Backend: Follow Room yet to be implemented
-
-        :param room:
-        :return:
-        """
-        log.debug("Backend: Follow Room yet to be implemented")  # TODO
-
     def rooms(self):
         """
         Backend: Rooms that the bot is a member of
@@ -656,14 +654,6 @@ class CiscoWebexTeamsBackend(ErrBot):
         return [
             f"{room.title} ({room.type})" for room in self.webex_teams_api.rooms.list()
         ]
-
-    def contacts(self):
-        """
-        Backend: Contacts yet to be implemented
-
-        :return:
-        """
-        log.debug("Backend: Contacts yet to be implemented")  # TODO
 
     def build_identifier(self, strrep):
         """
@@ -713,14 +703,6 @@ class CiscoWebexTeamsBackend(ErrBot):
 
         if not isinstance(mess.card, list) and mess.card is not None:
             mess.card = [mess.card]
-
-        # webebteamssdk currently has a bug that to results in cards not being included as attachments
-        # https://github.com/CiscoDevNet/webexteamssdk/pull/141
-        # TODO: This section can be removed once the above pull request is merged
-        for item, attachment in enumerate(mess.card):
-            if isinstance(attachment, AdaptiveCard):
-                mess.card[item] = webexteamssdk.utils.make_attachment(attachment)
-        # End of workaround
 
         self.send_message(mess)
 
@@ -791,14 +773,14 @@ class CiscoWebexTeamsBackend(ErrBot):
             return
 
         self.callback_send_message(
-                self.webex_teams_api.messages.create(
-                        roomId=mess.to.room.id,
-                        text=mess.body,
-                        markdown=md,
-                        parentId=mess.parent,
-                        attachments=mess.card,
-                        files=mess.files,
-                )
+            self.webex_teams_api.messages.create(
+                roomId=mess.to.room.id,
+                text=mess.body,
+                markdown=md,
+                parentId=mess.parent,
+                attachments=mess.card,
+                files=mess.files,
+            )
         )
 
     def callback_send_message(self, message):
@@ -811,11 +793,13 @@ class CiscoWebexTeamsBackend(ErrBot):
             try:
                 # As this is a custom callback specific to this backend, there is no
                 # expectation that all plugins with have implemented this method
-                if hasattr(plugin, 'callback_send_message'):
+                if hasattr(plugin, "callback_send_message"):
                     log.debug(f"Triggering 'callback_send_message' on {plugin.name}.")
-                    getattr(plugin, 'callback_send_message')(message)
+                    getattr(plugin, "callback_send_message")(message)
             except Exception:
-                log.exception(f"'callback_send_message' on {plugin.name} raised an exception.")
+                log.exception(
+                    f"'callback_send_message' on {plugin.name} raised an exception."
+                )
 
     def _teams_upload(self, stream):
         """
@@ -859,7 +843,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         Send a file to Cisco Webex Teams
 
-        :param user: is the identifier of the person you want to send it to.
+        :param identifier: is the identifier of the person or room you want to send it to.
         :param fsource: is a file object you want to send.
         :param name: is an optional filename for it.
         :param size: not supported in Webex Teams backend
@@ -872,7 +856,8 @@ class CiscoWebexTeamsBackend(ErrBot):
 
     def build_reply(self, mess, text=None, private=False, threaded=True):
         """
-        Build a reply in the format expected by errbot by swapping the to and from source and destination
+        Build a reply in the format expected by errbot by swapping the "to" and
+        "from" source and destination
 
         :param mess: The original CiscoWebexTeamsMessage object that will be replied to
         :param text: The text that is to be sent in reply to the message
@@ -944,6 +929,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         finally:
             self.disconnect_callback()
 
+    # noinspection PyProtectedMember
     def _get_device_info(self):
         """
         Setup device in Webex Teams to bridge events across websocket
@@ -965,7 +951,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         resp = self.webex_teams_api._session.post(DEVICES_URL, json=DEVICE_DATA)
         if resp is None:
             raise FailedToCreateWebexDevice(
-                "Could not create Webex Teams device using {}".format(DEVICES_URL)
+                f"Could not create Webex Teams device using {DEVICES_URL}"
             )
 
         self.device_info = resp
@@ -975,23 +961,27 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
         Backend: Change presence yet to be implemented
 
+        Not implemented in Webex Teams API:
+        https://ciscocollabcustomer.ideas.aha.io/ideas/WXCUST-I-3455
+
         :param status:
         :param message:
         :return:
         """
-        log.debug("Backend: Change presence yet to be implemented")  # TODO
+        log.debug("Backend: Change presence yet to be implemented")
         pass
 
-    def prefix_groupchat_reply(self, message, identifier):
+    def prefix_groupchat_reply(
+        self, message: Message, identifier: CiscoWebexTeamsPerson
+    ):
         """
-        Backend: Prefix group chat reply yet to be implemented
+        Backend: Prefix group chat reply
 
-        :param message:
-        :param identifier:
-        :return:
+        :param message: The message to be sent
+        :param identifier : The identifier of the person
         """
-        log.debug("Backend: Prefix group chat reply yet to be implemented")  # TODO
-        pass
+        super().prefix_groupchat_reply(message, identifier)
+        message.body = f"{identifier.group_prefix} {message.body}"
 
     @staticmethod
     def build_hydra_id(uuid, message_type=HydraTypes.MESSAGE.value):

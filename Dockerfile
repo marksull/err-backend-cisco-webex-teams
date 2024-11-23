@@ -12,6 +12,4 @@ WORKDIR backends/err-backend-cisco-webex-teams
 
 RUN pip install -r requirements.txt
 
-COPY CiscoWebexTeams.config.py config.py
-
 USER errbot
