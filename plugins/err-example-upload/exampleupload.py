@@ -1,5 +1,7 @@
-from errbot import BotPlugin, botcmd
 from pathlib import Path
+
+from errbot import botcmd
+from errbot import BotPlugin
 
 MY_TEXT = "This is my text message"
 FILE_1 = "/tmp/file1.txt"
@@ -9,7 +11,6 @@ FILE_2 = "/tmp/file2.txt"
 class ExampleUpload(BotPlugin):
     @botcmd
     def example_upload(self, msg, _):
-
         # Add your file(s) into the message.files attribute
         #
         # A couple of Webex Teams Message + Files idiosyncrasies:
@@ -18,7 +19,7 @@ class ExampleUpload(BotPlugin):
         #    just the filename, this backend will convert it to a list
         #
         # 2) By default Webex Teams does not support a Message body and an attachment in the same
-        #    message. If a message with with both is detected, this backend will split it into
+        #    message. If a message with both is detected, this backend will split it into
         #    two messages, one for the body and one for the attachment(s)
         #
         # 3) By default Webex teams does not support a Message with multiple attachments. If you
