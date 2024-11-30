@@ -621,7 +621,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
 
         person = CiscoWebexTeamsPerson(self)
-        person.id = message.id
+        person.id = message.personId
 
         try:
             person.email = message.personEmail

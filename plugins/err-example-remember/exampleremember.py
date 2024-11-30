@@ -20,6 +20,7 @@ class ExampleRemember(BotPlugin):
         """
 
         yield f"For the user: {msg.frm.email}"
+        yield f"With the user ID: {msg.frm.id}"
         yield f"I will remember this message: `{message}`"
 
         self._bot.remember(id=msg.frm.email, key="message", value=message)
@@ -47,6 +48,7 @@ class ExampleRemember(BotPlugin):
         """
 
         yield f"For the user: {msg.frm.email}"
+        yield f"With the user ID: {msg.frm.id}"
         yield "I will remember this these two args:"
         yield f"- `{arg_1}`"
         yield f"- `{arg_2}`"
