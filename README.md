@@ -19,23 +19,28 @@ This backend is currently under development.
 
 The quickest way to get started is to use Docker to build the image and run the preconfigured container.
 
-1) Clone this repo
-2) Build the Docker image: `make build`
-3) Copy the `.env` file to `.env.local` and update the environment variables
-4) Run the Docker container: `make run`
+1) Create a new bot here (if required) and note the token : https://developer.webex.com/my-apps/new/bot 
+2) Clone this repo: `git clone https://github.com/marksull/err-backend-cisco-webex-teams.git`
+3) From the cloned repo directory, copy the `.env` file to `.env.local` and update the environment variables in `.env.local`
+4) From the cloned repo directory, build and run the Docker image: `make build_run`
 
 This will start the container and run the bot. Start a 1:1 chat with the bot using the bot's email 
 address created during the teams bot registration process.
 
 Use the command `help` to see the available commands.
 
-There are four example plugins included in the container. The see the list of plugins use the command `status plugins`.
+There are six example plugins included in the container. The see the list of plugins use the command `status plugins`.
 
 To see the examples in action, use the following commands:
 1) `simple message` - get a simple message in response
 2) `example card` - get a card, selected an option from the dropdown, and receive a response
 3) `example upload` - get a message and multiple example files uploaded
 4) `simple message with callback` - get a simple message in response with a callback (check the logs for the callback response)
+5) `remember this` - remember a message and recall it later
+6) `recall` - recall the message remembered in the previous command
+7) `args remember blue green` - remember a message with multiple args and recall it later
+8) `args recall` - recall the message remembered in the previous command with multiple args
+9) `example large response` - see how to manually paginate a large response when using fenced code blocks
 
 To stop the container, issue a `Control-c`.
 
@@ -73,7 +78,7 @@ BOT_EXTRA_BACKEND_DIR = '/path_to/err-backend-cisco-webex-teams'
 
 
 To configure the bot you will need a Bot TOKEN. If you don't already have a bot setup on Cisco Webex Teams  details can
-be found here: https://developer.webex.com/bots.html.
+be found here: https://developer.webex.com/my-apps/new/bot.
 
 ```python
 BOT_IDENTITY = {
