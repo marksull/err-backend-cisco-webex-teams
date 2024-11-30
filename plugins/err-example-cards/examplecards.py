@@ -1,10 +1,10 @@
-from errbot import BotPlugin, botcmd
+from errbot import botcmd
+from errbot import BotPlugin
 
 
 class ExampleCards(BotPlugin):
     @botcmd
     def example_card(self, msg, _):
-
         # Add your card definition into the message.card attribute
         #
         # Use https://adaptivecards.io/designer/ to build your card
@@ -60,7 +60,7 @@ class ExampleCards(BotPlugin):
         """
 
         # As the cardAction is outside to normal message handling, we need to manually
-        # build the reply (swap the to and from addresses) and then manually send the message
+        # build the reply (swap the 'to' and 'from' addresses) and then manually send the message
 
         new_msg = self._bot.build_reply(msg, text=response)
         self._bot.send_message(new_msg)

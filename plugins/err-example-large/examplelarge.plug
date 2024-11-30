@@ -1,0 +1,9 @@
+[Core]
+Name = ExampleLarge
+Module = examplelarge
+
+[Documentation]
+Description = This is a simple plugin example that demonstrates how to work with large blocks of text
+
+[Python]
+Version = 3
