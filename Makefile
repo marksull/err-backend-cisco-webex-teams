@@ -3,7 +3,7 @@ CONTAINER_NAME_TEST = err-teams-test:local
 ENV_FILE= --env-file .env.local
 DOCKER_RUN = docker run -it --rm $(ENV_FILE)
 
-.PHONY: build run sh test_build test_run test_sh test_build_run
+.PHONY: build run sh build_run test_build test_run test_sh test_build_run
 
 build:
 	docker build -t $(CONTAINER_NAME) .
@@ -13,6 +13,10 @@ run:
 
 sh:
 	$(DOCKER_RUN) --entrypoint sh $(CONTAINER_NAME)
+
+build_run:
+	make build
+	make run
 
 test_build:
 	make build
