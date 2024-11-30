@@ -437,7 +437,7 @@ class CiscoWebexTeamsRoom(Room):
     __str__ = __unicode__
 
 
-# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences,PyShadowingBuiltins
 class CiscoWebexTeamsBackend(ErrBot):
     """
     This is the CiscoWebexTeams backend for errbot.
@@ -1032,8 +1032,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         :param id: Webex Teams ID of room or person
         :return: A dictionary. If no dictionary was found an empty dictionary will be returned.
         """
-        values = self.get(id)
-        return values if values else {}
+        return self.get(id, {})
 
     def recall_key(self, id, key):
         """

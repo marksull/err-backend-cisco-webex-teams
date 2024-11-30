@@ -1,0 +1,9 @@
+[Core]
+Name = ExampleRemember
+Module = exampleremember
+
+[Documentation]
+Description = This is a plugin example on how to remember data between calls.
+
+[Python]
+Version = 3
