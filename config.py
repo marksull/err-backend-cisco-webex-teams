@@ -17,9 +17,14 @@ AUTOINSTALL_DEPS = False
 # Security
 
 ## BOT Admins needs to be of type tuple otherwise errbot will fail to init correctly
-BOT_ADMINS = (os.environ.get("BOT_ADMIN"),)
+BOT_ADMINS = tuple(os.environ.get("BOT_ADMINS").split(","))
 ACCESS_CONTROLS = {}
 PERMITTED_DOMAINS = [BOT_ADMINS[0].split("@")[1]]
+
+if os.environ.get("PERMITTED_DOMAINS"):
+    PERMITTED_DOMAINS = PERMITTED_DOMAINS + os.environ.get("PERMITTED_DOMAINS").split(
+        ","
+    )
 
 # Workaround as the https version of this URL has expired certificate
 BOT_PLUGIN_INDEXES = "http://repos.errbot.io/repos.json"
