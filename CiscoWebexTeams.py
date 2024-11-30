@@ -24,7 +24,7 @@ from errbot.core import ErrBot
 from markdown import markdown
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.18.0"
+__version__ = "1.19.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -621,7 +621,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         """
 
         person = CiscoWebexTeamsPerson(self)
-        person.id = message.id
+        person.id = message.personId
 
         try:
             person.email = message.personEmail
