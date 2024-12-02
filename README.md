@@ -41,6 +41,8 @@ To see the examples in action, use the following commands:
 7) `args remember blue green` - remember a message with multiple args and recall it later
 8) `args recall` - recall the message remembered in the previous command with multiple args
 9) `example large response` - see how to manually paginate a large response when using fenced code blocks
+10) `template this is my message` - see how to use errbot templates to build your replies
+11) `this is a bad message` - see how to custom handle a message that is not a valid command (only required if you want to do something special - i.e. ask OpenAI?)
 
 To stop the container, issue a `Control-c`.
 

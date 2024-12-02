@@ -1,0 +1,9 @@
+[Core]
+Name = ExampleTemplate
+Module = exampletemplate
+
+[Documentation]
+Description = This is a plugin that leverages Errbot templates
+
+[Python]
+Version = 3
