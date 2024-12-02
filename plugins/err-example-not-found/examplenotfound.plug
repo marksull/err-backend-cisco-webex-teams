@@ -1,0 +1,9 @@
+[Core]
+Name = ExampleNotFound
+Module = examplenotfound
+
+[Documentation]
+Description = This is a plugin that adds a custom not found error message to the bot.
+
+[Python]
+Version = 3

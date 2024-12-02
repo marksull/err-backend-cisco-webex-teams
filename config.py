@@ -29,6 +29,9 @@ if os.environ.get("PERMITTED_DOMAINS"):
 # Workaround as the https version of this URL has expired certificate
 BOT_PLUGIN_INDEXES = "http://repos.errbot.io/repos.json"
 
+if os.environ.get("CUSTOM_CORE"):
+    CORE_PLUGINS = tuple(os.environ.get("CUSTOM_CORE").split(","))
+
 # LDAP SETTINGS if using err-ldap
 LDAP_URL = ""
 LDAP_USERNAME = ""
