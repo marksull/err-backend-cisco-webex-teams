@@ -32,7 +32,7 @@ Use the command `help` to see the available commands.
 There are nine example plugins included in the container. To see the list of plugins use the command `status plugins`.
 
 To see the examples in action, use the following commands:
-1) `simple message` - get a simple message in response
+1) `simple message this is my message` - get a simple message in response
 2) `example card` - get a card, selected an option from the dropdown, and receive a response
 3) `example upload` - get a message and multiple example files uploaded
 4) `simple message with callback` - get a simple message in response with a callback (check the logs for the callback response)
