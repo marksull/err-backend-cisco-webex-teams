@@ -1,0 +1,9 @@
+[Core]
+Name = ExampleFlow
+Module = exampleflow
+
+[Documentation]
+Description = This is example of how to use Errbot flow control
+
+[Python]
+Version = 3

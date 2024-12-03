@@ -29,7 +29,7 @@ address created during the teams bot registration process.
 
 Use the command `help` to see the available commands.
 
-There are six example plugins included in the container. The see the list of plugins use the command `status plugins`.
+There are nine example plugins included in the container. To see the list of plugins use the command `status plugins`.
 
 To see the examples in action, use the following commands:
 1) `simple message` - get a simple message in response
@@ -43,6 +43,7 @@ To see the examples in action, use the following commands:
 9) `example large response` - see how to manually paginate a large response when using fenced code blocks
 10) `template this is my message` - see how to use errbot templates to build your replies
 11) `this is a bad message` - see how to custom handle a message that is not a valid command (only required if you want to do something special - i.e. ask OpenAI?)
+12) `details` - start an example flow conversation to sequentially gather details from the user
 
 To stop the container, issue a `Control-c`.
 
@@ -98,7 +99,7 @@ incoming command for it to be processed correctly. To achieve this add your bot 
 BOT_PREFIX = 'my-webex-teams-bot-name '
 ```
 
-In a Webex Teams DIRECT room chat with the bot the bot prefix is not sent with the command. Ensure
+In a Webex Teams DIRECT room chat with the bot, the bot prefix is not sent with the command. Ensure
 to enable BOT_PREFIX_OPTIONAL_ON_CHAT so that the prefix is not required for direct communication:
 
 ```python
