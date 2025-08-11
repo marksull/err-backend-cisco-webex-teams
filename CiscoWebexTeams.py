@@ -4,12 +4,12 @@ import json
 import logging
 import random
 import string
+import sys
 import uuid
 from base64 import b64encode
 from copy import copy
 from enum import Enum
 
-import sys
 import webexteamssdk
 import websockets
 from errbot import rendering
@@ -24,7 +24,7 @@ from errbot.core import ErrBot
 from markdown import markdown
 from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.23.0"
+__version__ = "1.24.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -379,7 +379,8 @@ class CiscoWebexTeamsRoom(Room):
         :return:
         """
         self._backend.webex_teams_api.rooms.delete(self.id)
-        # We want to re-init this room so that is accurately reflects that is no longer exists
+        # We want to re-init this room so that is accurately reflected that
+        # it no longer exists
         self.load_room_from_title()
         log.debug(f"Deleted room: {self.title}")
 
@@ -607,7 +608,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             frm=card_occupant,
             to=card_room,
             parent=parent_id,
-            extras={"roomType": card_room.type},
+            extras={"roomType": card_room.type, "message_id": message.id},
         )
         card_msg.card_action = message
 
@@ -640,7 +641,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             frm=occupant,
             to=room,
             parent=parent_id,
-            extras={"roomType": message.roomType},
+            extras={"roomType": message.roomType, "message_id": message.id},
         )
         return msg
 
