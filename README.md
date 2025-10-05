@@ -11,9 +11,12 @@ there are no need for webhooks, firewall/nat changes, or tunnels (like NGROK) to
 
 The websocket implementation comes from: https://github.com/cgascoig/ciscospark-websocket
 
-## Status
+## WebexTeamsSDK versus WebexPythonSDK
 
-This backend is currently under development.
+WebexTeamsSDK migrated to WebexPythonSDK when Python 2 support was dropped. As all maintenance and new features are now
+being added to WebexPythonSDK, this backend has been updated to use WebexPythonSDK. This backend uses: 
+- WebexTeamsSDK for versions prior to 2.0.0
+- WebexPythonSDK for versions 2.0.0 and later
 
 ## Quick Start
 
@@ -78,7 +81,6 @@ BOT_EXTRA_BACKEND_DIR = '/path_to/err-backend-cisco-webex-teams'
 ```
 
 ## Bot Configuration
-
 
 To configure the bot you will need a Bot TOKEN. If you don't already have a bot setup on Cisco Webex Teams  details can
 be found here: https://developer.webex.com/my-apps/new/bot.

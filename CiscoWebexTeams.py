@@ -10,7 +10,7 @@ from base64 import b64encode
 from copy import copy
 from enum import Enum
 
-import webexteamssdk
+import webexpythonsdk
 import websockets
 from errbot import rendering
 from errbot.backends.base import Message
@@ -22,9 +22,8 @@ from errbot.backends.base import RoomOccupant
 from errbot.backends.base import Stream
 from errbot.core import ErrBot
 from markdown import markdown
-from webexteamssdk.models.cards import AdaptiveCard
 
-__version__ = "1.24.0"
+__version__ = "2.0.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -101,10 +100,10 @@ class CiscoWebexTeamsPerson(Person):
         self._backend = backend
         attributes = attributes or {}
 
-        if isinstance(attributes, webexteamssdk.Person):
+        if isinstance(attributes, webexpythonsdk.Person):
             self.teams_person = attributes
         else:
-            self.teams_person = webexteamssdk.Person(attributes)
+            self.teams_person = webexpythonsdk.Person(attributes)
 
     @property
     def id(self):
@@ -284,7 +283,7 @@ class CiscoWebexTeamsRoom(Room):
         room = [room for room in rooms if room.title == self._room_title]
 
         if not len(room) > 0:
-            self._room = webexteamssdk.models.immutable.Room({})
+            self._room = webexpythonsdk.models.immutable.Room({})
             self._room_id = None
         else:
             # TODO: not sure room title will duplicate
@@ -298,8 +297,8 @@ class CiscoWebexTeamsRoom(Room):
         try:
             self._room = self._backend.webex_teams_api.rooms.get(self._room_id)
             self._room_title = self._room.title
-        except webexteamssdk.exceptions.ApiError:
-            self._room = webexteamssdk.models.immutable.Room({})
+        except webexpythonsdk.exceptions.ApiError:
+            self._room = webexpythonsdk.models.immutable.Room({})
 
     @property
     def id(self):
@@ -308,7 +307,7 @@ class CiscoWebexTeamsRoom(Room):
 
     @property
     def room(self):
-        """Return the webexteamssdk.models.immutable.Room instance"""
+        """Return the webexpythonsdk.models.immutable.Room instance"""
         return self._room
 
     @property
@@ -337,7 +336,7 @@ class CiscoWebexTeamsRoom(Room):
                 f"{self._backend.bot_identifier.displayName} is NOW a member of {self.title} ({self.id}"
             )
 
-        except webexteamssdk.exceptions.ApiError as error:
+        except webexpythonsdk.exceptions.ApiError as error:
             # API now returning a 403 when trying to add user to a direct conversation and they are already in the
             # conversation. For groups if the user is already a member a 409 is returned.
             if error.response.status_code == 403 or error.response.status_code == 409:
@@ -473,7 +472,7 @@ class CiscoWebexTeamsBackend(ErrBot):
             sys.exit(1)
 
         log.debug("Setting up WebexAPI")
-        self.webex_teams_api = webexteamssdk.WebexTeamsAPI(access_token=self._bot_token)
+        self.webex_teams_api = webexpythonsdk.WebexAPI(access_token=self._bot_token)
 
         log.debug("Setting up device on Webex Teams")
         self.device_info = self._get_device_info()
@@ -677,7 +676,7 @@ class CiscoWebexTeamsBackend(ErrBot):
         :return:
             :class: CiscoWebexTeamsRoom
         """
-        if isinstance(room_id_or_name, webexteamssdk.Room):
+        if isinstance(room_id_or_name, webexpythonsdk.Room):
             return CiscoWebexTeamsRoom(backend=self, room_id=room_id_or_name.id)
 
         # query_room can provide us either a room name of an ID, so we need to check
@@ -944,7 +943,7 @@ class CiscoWebexTeamsBackend(ErrBot):
                 if device["name"] == DEVICE_DATA["name"]:
                     self.device_info = device
                     return device
-        except webexteamssdk.ApiError:
+        except webexpythonsdk.ApiError:
             pass
 
         logging.info("Device does not exist in Webex Teams, creating")
