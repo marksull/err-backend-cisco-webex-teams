@@ -9,6 +9,7 @@ import string
 import sys
 import uuid
 from base64 import b64encode
+from urllib.parse import urlparse, urlunparse
 from copy import copy
 from enum import Enum
 
@@ -482,7 +483,21 @@ class CiscoWebexTeamsBackend(ErrBot):
         self._verify_ssl = bot_identity.get("VERIFY_SSL", True)
 
         if self._proxy:
-            log.debug(f"Proxy configured: {self._proxy}")
+            parsed = urlparse(self._proxy)
+            if parsed.password:
+                if parsed.hostname:
+                    user = parsed.username or ""
+                    netloc = f"{user}:***@{parsed.hostname}"
+                    if parsed.port:
+                        netloc += f":{parsed.port}"
+                    safe_proxy = urlunparse(
+                        (parsed.scheme, netloc, parsed.path, parsed.params, parsed.query, parsed.fragment)
+                    )
+                else:
+                    safe_proxy = "[malformed proxy URL - redacted]"
+            else:
+                safe_proxy = self._proxy
+            log.debug(f"Proxy configured: {safe_proxy}")
 
         if not self._verify_ssl:
             log.warning(
