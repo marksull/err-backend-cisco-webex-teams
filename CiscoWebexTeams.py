@@ -484,10 +484,16 @@ class CiscoWebexTeamsBackend(ErrBot):
         if self._proxy:
             parsed = urlparse(self._proxy)
             if parsed.password:
-                netloc = f"{parsed.username}:***@{parsed.hostname}"
-                if parsed.port:
-                    netloc += f":{parsed.port}"
-                safe_proxy = urlunparse(parsed._replace(netloc=netloc))
+                if parsed.hostname:
+                    user = parsed.username or ""
+                    netloc = f"{user}:***@{parsed.hostname}"
+                    if parsed.port:
+                        netloc += f":{parsed.port}"
+                    safe_proxy = urlunparse(
+                        (parsed.scheme, netloc, parsed.path, parsed.params, parsed.query, parsed.fragment)
+                    )
+                else:
+                    safe_proxy = "[malformed proxy URL - redacted]"
             else:
                 safe_proxy = self._proxy
             log.debug(f"Proxy configured: {safe_proxy}")
