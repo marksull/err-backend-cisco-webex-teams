@@ -135,11 +135,11 @@ automatically from standard environment variables, or can be set explicitly in `
 Set any of the following environment variables and the bot will use the proxy automatically — no
 configuration changes required:
 
-| Variable | Used for |
-|---|---|
-| `wss_proxy` | WebSocket (`wss://`) connections only |
-| `https_proxy` | Both WebSocket and HTTPS REST API calls |
-| `http_proxy` | Fallback for both connections |
+| Variable      | Used for |
+|---------------|---|
+| `WSS_PROXY`   | WebSocket (`wss://`) connections only |
+| `HTTPS_PROXY` | Both WebSocket and HTTPS REST API calls |
+| `HTTP_PROXY`  | Fallback for both connections |
 
 Example:
 ```bash
