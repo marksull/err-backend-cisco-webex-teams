@@ -1,5 +1,5 @@
 markdown
 requests
-websockets
+websockets>=15
 webexpythonsdk
 errbot

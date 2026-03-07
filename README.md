@@ -125,6 +125,55 @@ example plugin [err-example-card](plugins/err-example-cards)
 While Webex Teams does not support the creation of a Message with both text and file(s) for upload, this backend 
 will now automatically split the message and the file upload into multiple messages. Refer to the example  [err-example-upload](plugins/err-example-upload)
 
+## Proxy Support
+
+Both the WebSocket connection and REST API calls support proxy configuration. Proxy settings are read
+automatically from standard environment variables, or can be set explicitly in `BOT_IDENTITY`.
+
+### Automatic proxy detection (environment variables)
+
+Set any of the following environment variables and the bot will use the proxy automatically — no
+configuration changes required:
+
+| Variable | Used for |
+|---|---|
+| `wss_proxy` | WebSocket (`wss://`) connections only |
+| `https_proxy` | Both WebSocket and HTTPS REST API calls |
+| `http_proxy` | Fallback for both connections |
+
+Example:
+```bash
+export HTTPS_PROXY=http://proxy.example.com:8080
+```
+
+### Explicit proxy configuration
+
+To configure a proxy directly in `config.py` (useful when running multiple bots with different proxy
+settings), add the optional keys to `BOT_IDENTITY`:
+
+```python
+BOT_IDENTITY = {
+    'TOKEN': '<insert your token here>',
+    'HTTPS_PROXY': 'http://proxy.example.com:8080',
+    'VERIFY_SSL': True,   # set to False if your proxy performs SSL inspection
+}
+```
+
+`BOT_IDENTITY` proxy settings take precedence over environment variables.
+
+### SOCKS proxy support
+
+SOCKS proxies are also supported. Install the optional `python-socks` package first:
+
+```bash
+pip install python-socks[asyncio]
+```
+
+Then configure via environment variable or `BOT_IDENTITY`:
+```bash
+export HTTPS_PROXY=socks5h://proxy.example.com:1080
+```
+
 ## Credit
 
 I unrestrainedly plagiarized from most of the already existing err backends and cgascoig's ciscospark-websocket implementation 

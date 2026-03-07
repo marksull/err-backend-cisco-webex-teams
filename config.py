@@ -3,7 +3,13 @@ import os
 
 BACKEND = "CiscoWebexTeams"
 
-BOT_IDENTITY = {"TOKEN": os.environ.get("BOT_IDENTITY_TOKEN")}
+BOT_IDENTITY = {
+    "TOKEN": os.environ.get("BOT_IDENTITY_TOKEN"),
+    # Optional: explicit proxy for corporate environments.
+    # If not set, standard HTTPS_PROXY / HTTP_PROXY env vars are detected automatically.
+    # "HTTPS_PROXY": os.environ.get("HTTPS_PROXY"),
+    # "VERIFY_SSL": True,  # set to False if your proxy performs SSL inspection
+}
 BOT_DATA_DIR = "/home/errbot/data"
 BOT_EXTRA_PLUGIN_DIR = "/home/errbot/backends/err-backend-cisco-webex-teams/plugins/"
 BOT_EXTRA_BACKEND_DIR = "/home/errbot/backends/err-backend-cisco-webex-teams"

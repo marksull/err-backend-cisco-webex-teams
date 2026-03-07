@@ -2,6 +2,7 @@ import asyncio
 import copyreg
 import json
 import logging
+import os
 import random
 import string
 import sys
@@ -472,7 +473,26 @@ class CiscoWebexTeamsBackend(ErrBot):
             sys.exit(1)
 
         log.debug("Setting up WebexAPI")
-        self.webex_teams_api = webexpythonsdk.WebexAPI(access_token=self._bot_token)
+        self._proxy = (
+            bot_identity.get("HTTPS_PROXY")
+            or os.environ.get("HTTPS_PROXY")
+            or os.environ.get("HTTP_PROXY")
+        )
+        self._verify_ssl = bot_identity.get("VERIFY_SSL", True)
+
+        if self._proxy:
+            log.debug(f"Proxy configured: {self._proxy}")
+
+        if not self._verify_ssl:
+            log.warning(
+                "SSL verification is disabled. Use only in trusted environments."
+            )
+
+        self.webex_teams_api = webexpythonsdk.WebexAPI(
+            access_token=self._bot_token,
+            proxies={"https": self._proxy} if self._proxy else None,
+            disable_ssl_verify=not self._verify_ssl,
+        )
 
         log.debug("Setting up device on Webex Teams")
         self.device_info = self._get_device_info()
@@ -895,7 +915,9 @@ class CiscoWebexTeamsBackend(ErrBot):
                         % self.device_info["webSocketUrl"]
                     )
                     async with websockets.connect(
-                        self.device_info["webSocketUrl"]
+                        self.device_info["webSocketUrl"],
+                        proxy=self._proxy or None,
+                        ssl=self._verify_ssl,
                     ) as ws:
                         logging.info("WebSocket Opened\n")
                         msg = {
