@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import random
+import ssl
 import string
 import sys
 import uuid
@@ -914,10 +915,16 @@ class CiscoWebexTeamsBackend(ErrBot):
                         "Opening websocket connection to %s"
                         % self.device_info["webSocketUrl"]
                     )
+                    if self._verify_ssl:
+                        ssl_context = None
+                    else:
+                        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                        ssl_context.check_hostname = False
+                        ssl_context.verify_mode = ssl.CERT_NONE
                     async with websockets.connect(
                         self.device_info["webSocketUrl"],
                         proxy=self._proxy or None,
-                        ssl=self._verify_ssl,
+                        ssl=ssl_context,
                     ) as ws:
                         logging.info("WebSocket Opened\n")
                         msg = {
