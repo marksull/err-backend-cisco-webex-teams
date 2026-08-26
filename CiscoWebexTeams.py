@@ -9,9 +9,10 @@ import string
 import sys
 import uuid
 from base64 import b64encode
-from urllib.parse import urlparse, urlunparse
 from copy import copy
 from enum import Enum
+from urllib.parse import urlparse
+from urllib.parse import urlunparse
 
 import webexpythonsdk
 import websockets
@@ -26,7 +27,7 @@ from errbot.backends.base import Stream
 from errbot.core import ErrBot
 from markdown import markdown
 
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
@@ -491,7 +492,14 @@ class CiscoWebexTeamsBackend(ErrBot):
                     if parsed.port:
                         netloc += f":{parsed.port}"
                     safe_proxy = urlunparse(
-                        (parsed.scheme, netloc, parsed.path, parsed.params, parsed.query, parsed.fragment)
+                        (
+                            parsed.scheme,
+                            netloc,
+                            parsed.path,
+                            parsed.params,
+                            parsed.query,
+                            parsed.fragment,
+                        )
                     )
                 else:
                     safe_proxy = "[malformed proxy URL - redacted]"
