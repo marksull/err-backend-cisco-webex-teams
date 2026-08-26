@@ -913,7 +913,7 @@ class CiscoWebexTeamsBackend(ErrBot):
                                 "WebSocket Received Message(raw): %s\n" % message
                             )
                             try:
-                                loop = asyncio.get_event_loop()
+                                loop = asyncio.get_running_loop()
                                 loop.run_in_executor(
                                     None, self.process_websocket, message
                                 )
@@ -922,7 +922,7 @@ class CiscoWebexTeamsBackend(ErrBot):
                                     "An exception occurred while processing message. Ignoring. "
                                 )
 
-                asyncio.get_event_loop().run_until_complete(_run())
+                asyncio.run(_run())
         except KeyboardInterrupt:
             log.info("Interrupt received, shutting down..")
             return True
