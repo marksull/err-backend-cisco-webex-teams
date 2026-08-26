@@ -23,7 +23,7 @@ from errbot.backends.base import Stream
 from errbot.core import ErrBot
 from markdown import markdown
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 log = logging.getLogger("errbot.backends.CiscoWebexTeams")
 
