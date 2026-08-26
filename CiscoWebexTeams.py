@@ -939,14 +939,19 @@ class CiscoWebexTeamsBackend(ErrBot):
                         % self.device_info["webSocketUrl"]
                     )
                     if self._verify_ssl:
-                        ssl_context = None
+                        # True tells websockets to build a default TLS context.
+                        # None would explicitly disable TLS and is rejected for
+                        # wss:// URIs.
+                        ssl_context = True
                     else:
                         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
                         ssl_context.check_hostname = False
                         ssl_context.verify_mode = ssl.CERT_NONE
                     async with websockets.connect(
                         self.device_info["webSocketUrl"],
-                        proxy=self._proxy or None,
+                        # True falls back to the system/environment proxy
+                        # configuration; None would disable proxying entirely.
+                        proxy=self._proxy or True,
                         ssl=ssl_context,
                     ) as ws:
                         logging.info("WebSocket Opened\n")
